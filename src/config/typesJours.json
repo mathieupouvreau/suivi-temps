@@ -1,4 +1,16 @@
 {
+  "_comment": "Configuration des types de jours disponibles dans l'application",
+  "_structure": {
+    "id": "Identifiant unique (ex: 'CP', '1/2Fe'). Les types avec '1/2' comptent pour 0.5 jour",
+    "libelle": "Libellé complet affiché dans les modals",
+    "abreviation": "Version courte affichée dans les menus déroulants",
+    "couleur": "Couleur de fond du badge (code hexadécimal)",
+    "couleurTexte": "Couleur du texte du badge pour assurer la lisibilité"
+  },
+  "_notes": [
+    "Les types '1/2' utilisent des couleurs pastel pour les distinguer visuellement",
+    "CP = Congé Payé, Fe = Férié, Arr = Arrêt Maladie, For = Formation, Cli = Chez Client"
+  ],
   "typesJours": [
     {
       "id": "CP",

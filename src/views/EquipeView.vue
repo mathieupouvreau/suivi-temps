@@ -4,6 +4,13 @@ import { useRouter } from 'vue-router'
 import { useEquipeStore } from '../stores/equipe'
 import Modal from '../components/Modal.vue'
 
+/**
+ * Vue de gestion de l'équipe
+ * Permet d'ajouter/supprimer des membres
+ * Gère l'import/export CSV de l'équipe
+ * Utilise le soft-delete: les membres supprimés sont marqués inactifs
+ */
+
 const router = useRouter()
 const equipeStore = useEquipeStore()
 
@@ -31,22 +38,33 @@ const supprimerPersonne = (id) => {
   equipeStore.supprimerMembre(id)
 }
 
+/**
+ * Exporte l'équipe au format CSV
+ * Format: ID,Nom avec guillemets autour des noms
+ * Nom du fichier: equipe_YYYY-MM-DD.csv
+ */
 const exporterCSV = () => {
-  // Création du contenu CSV
+  // Création du contenu CSV avec en-tête
   const csv = [
     'ID,Nom',
     ...equipeStore.membres.map(p => `${p.id},"${p.nom}"`)
   ].join('\n')
 
-  // Création du blob et téléchargement
+  // Création du blob et téléchargement automatique
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const link = document.createElement('a')
   link.href = URL.createObjectURL(blob)
   link.download = `equipe_${new Date().toISOString().split('T')[0]}.csv`
   link.click()
-  URL.revokeObjectURL(link.href)
+  URL.revokeObjectURL(link.href) // Libérer la mémoire
 }
 
+/**
+ * Importe une équipe depuis un fichier CSV
+ * Remplace l'équipe actuelle par les données du fichier
+ * Format attendu: ID,Nom (avec ou sans guillemets)
+ * @param {Event} event - Événement de changement du input file
+ */
 const importerCSV = (event) => {
   const file = event.target.files[0]
   if (!file) return
@@ -56,18 +74,18 @@ const importerCSV = (event) => {
     const text = e.target.result
     const lignes = text.split('\n').filter(l => l.trim())
 
-    // Ignorer la première ligne (en-tête)
+    // Ignorer la première ligne (en-tête: ID,Nom)
     const donnees = lignes.slice(1).map(ligne => {
-      // Gestion des CSV avec guillemets
+      // Gestion des CSV avec guillemets: 1,"Jean Dupont"
       const match = ligne.match(/^(\d+),\"?([^\"]+)\"?$/)
       if (match) {
         return {
           id: parseInt(match[1]),
           nom: match[2].trim(),
-          actif: true
+          actif: true // Tous les membres importés sont actifs par défaut
         }
       }
-      // Fallback simple
+      // Fallback pour format simple sans guillemets: 1,Jean Dupont
       const parts = ligne.split(',')
       if (parts.length >= 2) {
         return {
@@ -77,7 +95,7 @@ const importerCSV = (event) => {
         }
       }
       return null
-    }).filter(p => p && p.id && p.nom)
+    }).filter(p => p && p.id && p.nom) // Filtrer les lignes invalides
 
     if (donnees.length > 0) {
       equipeStore.chargerEquipe(donnees)

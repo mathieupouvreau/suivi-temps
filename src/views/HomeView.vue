@@ -3,22 +3,45 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAnneesStore } from '../stores/annees'
 
+/**
+ * Vue d'accueil de l'application
+ * Affiche la liste des années disponibles et permet de :
+ * - Ajouter une nouvelle année
+ * - Supprimer une année (avec confirmation)
+ * - Accéder à la vue détaillée d'une année
+ * - Naviguer vers la gestion de l'équipe
+ * - Consulter les types de jours
+ */
+
 const router = useRouter()
 const anneesStore = useAnneesStore()
-const nouvelleAnnee = ref('')
+const nouvelleAnnee = ref('')  // Input pour ajouter une année
 
+/**
+ * Navigue vers la vue détaillée d'une année
+ * @param {number} annee - Année à afficher (ex: 2025)
+ */
 const voirAnnee = (annee) => {
   router.push(`/annee/${annee}`)
 }
 
+/**
+ * Ajoute une nouvelle année après validation
+ * Validation : année entre 1900 et 2100
+ */
 const ajouterAnnee = () => {
   const annee = parseInt(nouvelleAnnee.value)
   if (annee && annee > 1900 && annee < 2100) {
     anneesStore.ajouterAnnee(annee)
-    nouvelleAnnee.value = ''
+    nouvelleAnnee.value = ''  // Réinitialiser l'input
   }
 }
 
+/**
+ * Supprime une année après confirmation
+ * Supprime aussi tous les jours associés (cascade delete)
+ * @param {number} annee - Année à supprimer
+ */
 const supprimerAnnee = (annee) => {
   if (confirm(`Supprimer l'année ${annee} ?`)) {
     anneesStore.supprimerAnnee(annee)

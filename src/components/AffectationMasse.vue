@@ -4,85 +4,129 @@ import { defineProps, defineEmits } from 'vue'
 import typesJoursData from '../config/typesJours.json'
 import { MOIS_AVEC_INDEX } from '../config/constantes'
 
+/**
+ * Composant modal pour affecter un type de jour en masse
+ * Permet de sélectionner :
+ * - Un type de jour (CP, Fe, Arr, etc.)
+ * - Une ou plusieurs personnes
+ * - Une période (date début - date fin)
+ * Applique le type à tous les jours de la période pour les personnes sélectionnées
+ */
+
 const props = defineProps({
-  show: Boolean,
-  annee: Number,
-  personnes: Array
+  show: Boolean,        // Visibilité de la modal
+  annee: Number,        // Année en cours
+  personnes: Array      // Liste des personnes actives
 })
 
 const emit = defineEmits(['close', 'apply'])
 
+// Configuration des types de jours disponibles
 const typesJours = typesJoursData.typesJours
-const typeSelectionne = ref(null)
-const personnesSelectionnees = ref([])
-const moisDebut = ref(1)
-const jourDebut = ref(1)
-const moisFin = ref(1)
-const jourFin = ref(1)
+
+// État du formulaire
+const typeSelectionne = ref(null)            // ID du type sélectionné (ex: 'CP', 'Fe')
+const personnesSelectionnees = ref([])       // IDs des personnes sélectionnées
+const moisDebut = ref(1)                     // Mois de début (1-12)
+const jourDebut = ref(1)                     // Jour de début (1-31)
+const moisFin = ref(1)                       // Mois de fin (1-12)
+const jourFin = ref(1)                       // Jour de fin (1-31)
 
 const mois = MOIS_AVEC_INDEX
 
+/**
+ * Calcule le nombre maximum de jours dans le mois de début sélectionné
+ * Gère automatiquement les années bissextiles et les mois de différentes durées
+ * @returns {number} Nombre de jours (28-31)
+ */
 const joursMaxDebut = computed(() => {
   return new Date(props.annee, moisDebut.value, 0).getDate()
 })
 
+/**
+ * Calcule le nombre maximum de jours dans le mois de fin sélectionné
+ * @returns {number} Nombre de jours (28-31)
+ */
 const joursMaxFin = computed(() => {
   return new Date(props.annee, moisFin.value, 0).getDate()
 })
 
+/**
+ * Toggle la sélection d'une personne (ajoute ou retire de la liste)
+ * @param {number} personneId - ID de la personne à toggler
+ */
 const togglePersonne = (personneId) => {
   const index = personnesSelectionnees.value.indexOf(personneId)
   if (index > -1) {
+    // Désélectionner si déjà sélectionnée
     personnesSelectionnees.value.splice(index, 1)
   } else {
+    // Ajouter à la sélection
     personnesSelectionnees.value.push(personneId)
   }
 }
 
+/**
+ * Sélectionne toutes les personnes ou désélectionne tout
+ * Bascule entre les deux états selon l'état actuel
+ */
 const selectionnerTout = () => {
   if (personnesSelectionnees.value.length === props.personnes.length) {
+    // Tout désélectionner si tout est déjà sélectionné
     personnesSelectionnees.value = []
   } else {
+    // Sélectionner toutes les personnes
     personnesSelectionnees.value = props.personnes.map(p => p.id)
   }
 }
 
+/**
+ * Applique l'affectation en masse et émet l'événement vers le parent
+ * Valide les données, génère la liste des jours concernés et réinitialise le formulaire
+ */
 const appliquer = () => {
+  // Validation : vérifier qu'un type est sélectionné
   if (!typeSelectionne.value) {
     alert('Veuillez sélectionner un type de jour')
     return
   }
+
+  // Validation : vérifier qu'au moins une personne est sélectionnée
   if (personnesSelectionnees.value.length === 0) {
     alert('Veuillez sélectionner au moins une personne')
     return
   }
 
-  // Construire la liste des jours à affecter
+  // Construire la liste de tous les jours entre la date de début et de fin
   const joursAAffecter = []
+  // Note : moisDebut.value va de 1 à 12, mais Date() attend 0-11
   const dateDebut = new Date(props.annee, moisDebut.value - 1, jourDebut.value)
   const dateFin = new Date(props.annee, moisFin.value - 1, jourFin.value)
 
+  // Validation : vérifier que la période est cohérente
   if (dateDebut > dateFin) {
     alert('La date de début doit être antérieure ou égale à la date de fin')
     return
   }
 
+  // Générer tous les jours de la période (inclusif)
   let dateCourante = new Date(dateDebut)
   while (dateCourante <= dateFin) {
     joursAAffecter.push({
-      moisIndex: dateCourante.getMonth(),
-      jour: dateCourante.getDate()
+      moisIndex: dateCourante.getMonth(),    // 0-11
+      jour: dateCourante.getDate()           // 1-31
     })
-    dateCourante.setDate(dateCourante.getDate() + 1)
+    dateCourante.setDate(dateCourante.getDate() + 1)  // Avancer d'un jour
   }
 
+  // Émettre l'événement 'apply' avec toutes les données
   emit('apply', {
     typeId: typeSelectionne.value,
     personnesIds: personnesSelectionnees.value,
     jours: joursAAffecter
   })
 
-  // Réinitialiser le formulaire
+  // Réinitialiser le formulaire après application
   typeSelectionne.value = null
   personnesSelectionnees.value = []
   moisDebut.value = 1
@@ -91,6 +135,9 @@ const appliquer = () => {
   jourFin.value = 1
 }
 
+/**
+ * Ferme la modal sans appliquer les modifications
+ */
 const fermer = () => {
   emit('close')
 }
