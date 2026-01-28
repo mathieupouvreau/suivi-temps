@@ -1,5 +1,6 @@
 import { ref, watch } from 'vue'
 import { defineStore } from 'pinia'
+import { useJoursStore } from './jours'
 
 export const useAnneesStore = defineStore('annees', () => {
   // Charger depuis localStorage ou utiliser les valeurs par défaut
@@ -23,6 +24,9 @@ export const useAnneesStore = defineStore('annees', () => {
 
   function supprimerAnnee(annee) {
     annees.value = annees.value.filter(a => a !== annee)
+    // Supprimer aussi tous les jours de cette année du localStorage
+    const joursStore = useJoursStore()
+    joursStore.supprimerJoursAnnee(annee)
   }
 
   return { annees, ajouterAnnee, supprimerAnnee }

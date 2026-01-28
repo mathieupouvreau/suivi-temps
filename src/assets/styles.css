@@ -110,6 +110,16 @@ button {
   box-sizing: border-box;
 }
 
+.presence-colonne {
+  width: 5rem;
+  min-width: 5rem;
+  max-width: 5rem;
+  text-align: center;
+  font-weight: 600;
+  background-color: #e8f5e9;
+  border-left: 0.125rem solid #4caf50 !important;
+}
+
 .jour-colonne {
   font-size: 0.85rem;
 }

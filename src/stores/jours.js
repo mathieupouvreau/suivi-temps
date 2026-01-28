@@ -45,11 +45,19 @@ export const useJoursStore = defineStore('jours', () => {
     return jours.value[annee]?.[personneId]?.[moisIndex] || {}
   }
 
+  // Supprimer tous les jours d'une année
+  function supprimerJoursAnnee(annee) {
+    if (jours.value[annee]) {
+      delete jours.value[annee]
+    }
+  }
+
   return {
     jours,
     getTypeJour,
     setTypeJour,
     clearTypeJour,
-    getJoursMois
+    getJoursMois,
+    supprimerJoursAnnee
   }
 })

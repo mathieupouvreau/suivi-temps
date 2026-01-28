@@ -169,6 +169,34 @@ const compteurs = computed(() => {
   return result
 })
 
+// Calculer le nombre de jours de présence par mois pour une personne
+const getPresenceMois = (personneId, moisIndex) => {
+  let presence = 0
+  const nbJours = getJoursDansMois(moisIndex)
+
+  for (let jour = 1; jour <= nbJours; jour++) {
+    const typeId = joursStore.getTypeJour(annee.value, personneId, moisIndex, jour)
+    if (typeId) {
+      // Les types contenant "1/2" comptent pour 0.5 jour de présence (l'autre moitié étant travaillée)
+      if (typeId.includes('1/2') && !isWeekend(moisIndex, jour)) {
+        presence += 0.5
+      }
+    } else {
+      // Compter les jours sans type qui ne sont pas des weekends
+      if (!isWeekend(moisIndex, jour)) {
+        presence++
+      }
+    }
+  }
+
+  return presence
+}
+
+// Formater le nombre de jours de présence
+const formatPresence = (value) => {
+  return value % 1 === 0 ? value : value.toFixed(1)
+}
+
 </script>
 
 <template>
@@ -202,6 +230,7 @@ const compteurs = computed(() => {
               <div>{{ jour }}</div>
               <div class="nom-jour">{{ getNomJour(moisIndex, jour) }}</div>
             </th>
+            <th class="presence-colonne">Présence</th>
           </tr>
         </thead>
         <tbody>
@@ -218,6 +247,7 @@ const compteurs = computed(() => {
                 @change="(typeId) => handleTypeChange(personne.id, moisIndex, jour, typeId)"
               />
             </td>
+            <td class="presence-colonne">{{ formatPresence(getPresenceMois(personne.id, moisIndex)) }}</td>
           </tr>
         </tbody>
       </table>
