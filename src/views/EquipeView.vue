@@ -63,7 +63,8 @@ const importerCSV = (event) => {
       if (match) {
         return {
           id: parseInt(match[1]),
-          nom: match[2].trim()
+          nom: match[2].trim(),
+          actif: true
         }
       }
       // Fallback simple
@@ -71,7 +72,8 @@ const importerCSV = (event) => {
       if (parts.length >= 2) {
         return {
           id: parseInt(parts[0]),
-          nom: parts.slice(1).join(',').replace(/"/g, '').trim()
+          nom: parts.slice(1).join(',').replace(/"/g, '').trim(),
+          actif: true
         }
       }
       return null
@@ -96,18 +98,22 @@ const importerCSV = (event) => {
     <h1>Gestion de l'équipe</h1>
 
     <div class="ajout-section">
-      <input
-        v-model="nouveauNom"
-        type="text"
-        placeholder="Nom de la personne"
-        @keyup.enter="ajouterPersonne"
-      />
-      <button @click="ajouterPersonne">Ajouter</button>
-      <button @click="exporterCSV" class="btn-export">Exporter CSV</button>
-      <label class="btn-import">
-        Importer CSV
-        <input type="file" accept=".csv" @change="importerCSV" style="display: none;" />
-      </label>
+      <div class="ajout-left">
+        <input
+          v-model="nouveauNom"
+          type="text"
+          placeholder="Nom de la personne"
+          @keyup.enter="ajouterPersonne"
+        />
+        <button @click="ajouterPersonne">Ajouter</button>
+      </div>
+      <div class="ajout-right">
+        <button @click="exporterCSV" class="btn-export">Exporter CSV</button>
+        <label class="btn-import">
+          Importer CSV
+          <input type="file" accept=".csv" @change="importerCSV" style="display: none;" />
+        </label>
+      </div>
     </div>
 
     <table>
@@ -118,7 +124,7 @@ const importerCSV = (event) => {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="personne in equipeStore.membres" :key="personne.id">
+        <tr v-for="personne in equipeStore.membresActifs" :key="personne.id">
           <td>{{ personne.nom }}</td>
           <td>
             <button @click="supprimerPersonne(personne.id)" class="btn-supprimer">

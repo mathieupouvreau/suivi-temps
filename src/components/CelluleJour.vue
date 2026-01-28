@@ -75,7 +75,7 @@ onUnmounted(() => {
           color: type.couleurTexte
         }"
       >
-        {{ type.id }} - {{ type.libelle }}
+        {{ type.id }} - {{ type.abreviation }}
       </button>
       <button @click="clearType" class="menu-type-clear">
         Effacer

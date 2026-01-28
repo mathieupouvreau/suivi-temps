@@ -3,38 +3,72 @@
     {
       "id": "CP",
       "libelle": "Congé Payé",
+      "abreviation": "Congé",
       "couleur": "#4CAF50",
       "couleurTexte": "#FFFFFF"
     },
     {
       "id": "1/2CP",
       "libelle": "Demi Congé Payé",
-      "couleur": "#8BC34A",
+      "abreviation": "½ Congé",
+      "couleur": "#C8E6C9",
       "couleurTexte": "#000000"
     },
     {
       "id": "Fe",
       "libelle": "Férié",
+      "abreviation": "Férié",
       "couleur": "#FF9800",
       "couleurTexte": "#FFFFFF"
     },
     {
+      "id": "1/2Fe",
+      "libelle": "Demi Férié",
+      "abreviation": "½ Férié",
+      "couleur": "#FFE0B2",
+      "couleurTexte": "#000000"
+    },
+    {
       "id": "Arr",
       "libelle": "Arrêt Maladie",
+      "abreviation": "Maladie",
       "couleur": "#F44336",
       "couleurTexte": "#FFFFFF"
     },
     {
+      "id": "1/2Arr",
+      "libelle": "Demi Arrêt Maladie",
+      "abreviation": "½ Maladie",
+      "couleur": "#FFCDD2",
+      "couleurTexte": "#000000"
+    },
+    {
       "id": "For",
       "libelle": "Formation",
+      "abreviation": "Formation",
       "couleur": "#2196F3",
       "couleurTexte": "#FFFFFF"
     },
     {
+      "id": "1/2For",
+      "libelle": "Demi Formation",
+      "abreviation": "½ Formation",
+      "couleur": "#BBDEFB",
+      "couleurTexte": "#000000"
+    },
+    {
       "id": "Cli",
       "libelle": "Chez Client",
+      "abreviation": "Client",
       "couleur": "#9C27B0",
       "couleurTexte": "#FFFFFF"
+    },
+    {
+      "id": "1/2Cli",
+      "libelle": "Demi Chez Client",
+      "abreviation": "½ Client",
+      "couleur": "#E1BEE7",
+      "couleurTexte": "#000000"
     }
   ]
 }

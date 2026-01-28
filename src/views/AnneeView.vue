@@ -6,6 +6,7 @@ import { useJoursStore } from '../stores/jours'
 import CelluleJour from '../components/CelluleJour.vue'
 import Modal from '../components/Modal.vue'
 import AffectationMasse from '../components/AffectationMasse.vue'
+import ModalCompteurs from '../components/ModalCompteurs.vue'
 import { MOIS, NOMS_JOURS } from '../config/constantes'
 
 const router = useRouter()
@@ -18,6 +19,7 @@ const annee = ref(parseInt(route.params.annee) || new Date().getFullYear())
 const showModal = ref(false)
 const modalMessage = ref('')
 const showAffectation = ref(false)
+const showCompteurs = ref(false)
 
 const afficherModal = (message) => {
   modalMessage.value = message
@@ -122,6 +124,51 @@ const appliquerAffectation = ({ typeId, personnesIds, jours }) => {
   showAffectation.value = false
   afficherModal(`${count} jour(s) affecté(s)`)
 }
+
+const ouvrirCompteurs = () => {
+  showCompteurs.value = true
+}
+
+const fermerCompteurs = () => {
+  showCompteurs.value = false
+}
+
+// Calculer les compteurs pour chaque personne
+const compteurs = computed(() => {
+  const result = {}
+
+  equipeStore.membresActifs.forEach(personne => {
+    result[personne.id] = { joursSansType: 0 }
+
+    // Parcourir tous les mois de l'année
+    for (let moisIndex = 0; moisIndex < 12; moisIndex++) {
+      const nbJours = getJoursDansMois(moisIndex)
+
+      // Parcourir tous les jours du mois
+      for (let jour = 1; jour <= nbJours; jour++) {
+        const typeId = joursStore.getTypeJour(annee.value, personne.id, moisIndex, jour)
+        if (typeId) {
+          // Les types contenant "1/2" comptent pour 0.5 jour
+          const increment = typeId.includes('1/2') ? 0.5 : 1
+          result[personne.id][typeId] = (result[personne.id][typeId] || 0) + increment
+
+          // Si c'est une demi-journée, l'autre moitié est du temps travaillé
+          if (typeId.includes('1/2') && !isWeekend(moisIndex, jour)) {
+            result[personne.id].joursSansType += 0.5
+          }
+        } else {
+          // Compter les jours sans type qui ne sont pas des weekends
+          if (!isWeekend(moisIndex, jour)) {
+            result[personne.id].joursSansType++
+          }
+        }
+      }
+    }
+  })
+
+  return result
+})
+
 </script>
 
 <template>
@@ -130,12 +177,17 @@ const appliquerAffectation = ({ typeId, personnesIds, jours }) => {
     <h1>Année {{ annee }}</h1>
 
     <div class="actions-section">
-      <button @click="ouvrirAffectation" class="btn-affectation">Affectation en masse</button>
-      <button @click="exporterJSON" class="btn-export">Exporter les jours (JSON)</button>
-      <label class="btn-import">
-        Importer les jours (JSON)
-        <input type="file" accept=".json" @change="importerJSON" style="display: none;" />
-      </label>
+      <div class="actions-left">
+        <button @click="ouvrirAffectation" class="btn-affectation">Affectation en masse</button>
+        <button @click="ouvrirCompteurs" class="btn-compteurs">Compteurs</button>
+      </div>
+      <div class="actions-right">
+        <button @click="exporterJSON" class="btn-export">Exporter les jours (JSON)</button>
+        <label class="btn-import">
+          Importer les jours (JSON)
+          <input type="file" accept=".json" @change="importerJSON" style="display: none;" />
+        </label>
+      </div>
     </div>
 
     <div v-for="(nomMois, moisIndex) in mois" :key="moisIndex" class="mois-section">
@@ -153,7 +205,7 @@ const appliquerAffectation = ({ typeId, personnesIds, jours }) => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="personne in equipeStore.membres" :key="personne.id">
+          <tr v-for="personne in equipeStore.membresActifs" :key="personne.id">
             <td class="nom-colonne">{{ personne.nom }}</td>
             <td v-for="jour in joursParMois[moisIndex]" :key="jour"
                 :class="['jour-cell', { 'weekend': isWeekend(moisIndex, jour) }]">
@@ -175,9 +227,15 @@ const appliquerAffectation = ({ typeId, personnesIds, jours }) => {
     <AffectationMasse
       :show="showAffectation"
       :annee="annee"
-      :personnes="equipeStore.membres"
+      :personnes="equipeStore.membresActifs"
       @close="fermerAffectation"
       @apply="appliquerAffectation"
+    />
+    <ModalCompteurs
+      :show="showCompteurs"
+      :personnes="equipeStore.membresActifs"
+      :compteurs="compteurs"
+      @close="fermerCompteurs"
     />
   </div>
 </template>

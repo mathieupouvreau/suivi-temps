@@ -56,6 +56,19 @@ button {
   margin-bottom: 2rem;
   display: flex;
   gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.actions-section .actions-left {
+  display: flex;
+  gap: 1rem;
+}
+
+.actions-section .actions-right {
+  display: flex;
+  gap: 1rem;
+  margin-left: auto;
 }
 
 .mois-section {
@@ -124,6 +137,20 @@ button {
   margin-bottom: 2rem;
   display: flex;
   gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ajout-section .ajout-left {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+}
+
+.ajout-section .ajout-right {
+  display: flex;
+  gap: 1rem;
+  margin-left: auto;
 }
 
 .ajout-section input {
@@ -236,13 +263,21 @@ button {
   position: absolute;
   top: 100%;
   left: 0;
+  right: auto;
   background: white;
   border: 0.0625rem solid #ddd;
   border-radius: 0.25rem;
   box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.2);
   z-index: 100;
   min-width: 12rem;
+  max-width: 15rem;
   margin-top: 0.25rem;
+}
+
+/* Positionner le menu à gauche si on est près du bord droit */
+.cellule-jour:nth-last-child(-n+5) .menu-types {
+  left: auto;
+  right: 0;
 }
 
 .menu-type-item,
@@ -254,6 +289,10 @@ button {
   border: none;
   cursor: pointer;
   font-size: 0.875rem;
+}
+
+.menu-type-item {
+  border-bottom: 0.0625rem solid #000;
 }
 
 .menu-type-item:hover {
@@ -437,4 +476,114 @@ button {
 
 .btn-affectation:hover {
   background-color: #5a32a3;
+}
+.btn-compteurs {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+}
+
+.btn-compteurs:hover {
+  background-color: #138496;
+}
+
+/* Styles pour la modal des compteurs */
+
+.modal-compteurs {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 0;
+  width: 90%;
+  max-width: 60rem;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 0.25rem 1.5rem rgba(0, 0, 0, 0.2);
+}
+
+.modal-compteurs .modal-header {
+  padding: 1.5rem;
+  border-bottom: 0.0625rem solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-compteurs .modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.modal-compteurs .modal-body {
+  padding: 1.5rem;
+  overflow-x: auto;
+}
+
+.modal-compteurs .modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 0.0625rem solid #dee2e6;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.table-compteurs {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+}
+
+.table-compteurs thead th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  padding: 0.75rem;
+  text-align: center;
+  border: 0.0625rem solid #dee2e6;
+  font-size: 0.9rem;
+}
+
+.table-compteurs tbody td,
+.table-compteurs tfoot td {
+  padding: 0.75rem;
+  text-align: center;
+  border: 0.0625rem solid #dee2e6;
+}
+
+.table-compteurs .nom-personne {
+  text-align: left;
+  font-weight: 500;
+}
+
+.table-compteurs .compteur-cell {
+  font-variant-numeric: tabular-nums;
+}
+
+.table-compteurs .total-cell {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-compteurs tfoot td {
+  background-color: #e9ecef;
+  font-weight: 600;
+}
+
+.table-compteurs .sans-type-cell {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.btn-fermer {
+  padding: 0.5rem 1.5rem;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.btn-fermer:hover {
+  background-color: #5a6268;
 }
