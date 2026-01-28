@@ -1,0 +1,40 @@
+{
+  "typesJours": [
+    {
+      "id": "CP",
+      "libelle": "Congé Payé",
+      "couleur": "#4CAF50",
+      "couleurTexte": "#FFFFFF"
+    },
+    {
+      "id": "1/2CP",
+      "libelle": "Demi Congé Payé",
+      "couleur": "#8BC34A",
+      "couleurTexte": "#000000"
+    },
+    {
+      "id": "Fe",
+      "libelle": "Férié",
+      "couleur": "#FF9800",
+      "couleurTexte": "#FFFFFF"
+    },
+    {
+      "id": "Arr",
+      "libelle": "Arrêt Maladie",
+      "couleur": "#F44336",
+      "couleurTexte": "#FFFFFF"
+    },
+    {
+      "id": "For",
+      "libelle": "Formation",
+      "couleur": "#2196F3",
+      "couleurTexte": "#FFFFFF"
+    },
+    {
+      "id": "Cli",
+      "libelle": "Chez Client",
+      "couleur": "#9C27B0",
+      "couleurTexte": "#FFFFFF"
+    }
+  ]
+}
