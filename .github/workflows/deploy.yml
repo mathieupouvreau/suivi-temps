@@ -29,6 +29,14 @@ jobs:
 
       - name: Install dependencies
         run: npm install --force
+        continue-on-error: true
+
+      - name: Upload npm logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-logs
+          path: ~/.npm/_logs/
 
       - name: Build
         run: npm run build
