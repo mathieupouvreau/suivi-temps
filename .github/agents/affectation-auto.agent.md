@@ -46,6 +46,7 @@ Après validation du diagnostic et des dates, utilise le skill `executer-affecta
 4. **Conserver** intégralement les affectations existantes
 5. **Ne jamais modifier** les fichiers source de l'application
 6. **Questions séquentielles** : ne poser qu'une seule question à la fois, attendre la réponse de l'utilisateur avant de poser la suivante. Ne jamais regrouper plusieurs questions dans un même message.
+7. **Plusieurs personnes par tâche** : l'utilisateur peut désigner plusieurs personnes préférées pour une même tâche — elles sont affectées en priorité dans l'ordre de sélection, chacune au maximum de sa capacité, avant de compléter avec les membres selon la priorité des rôles.
 
 ## Limites
 

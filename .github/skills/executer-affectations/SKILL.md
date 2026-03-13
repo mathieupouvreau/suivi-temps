@@ -14,6 +14,7 @@ Générer le fichier `data/affectations.json` avec les nouvelles affectations en
 L'utilisateur ou l'agent a déjà fourni :
 - La liste des projets et tâches à planifier (issue de l'analyse)
 - Les dates de début et de fin par projet (JJ/MM/AAAA)
+- Les préférences de personnes par tâche et par projet (optionnel — "Pas de préférence" si non renseigné). Chaque tâche peut avoir **une ou plusieurs personnes préférées** (liste ordonnée).
 - Les fichiers `data/equipe.csv`, `data/projets.csv`, `data/jours.json`, `data/affectations.json`
 
 ## Contraintes métier
@@ -29,8 +30,15 @@ L'utilisateur ou l'agent a déjà fourni :
 6. **Ne JAMAIS replanifier une tâche déjà affectée** — seules les tâches sans affectation existante sont éligibles
 7. **Conserver intégralement les affectations existantes** dans le fichier de sortie
 
+### Préférences utilisateur
+8. **Respecter les préférences de personnes** — si l'utilisateur a indiqué une ou plusieurs préférences pour une tâche d'un projet :
+   - Les personnes préférées sont **affectées en priorité** à cette tâche, avant les autres membres éligibles, **dans l'ordre de sélection** fourni par l'utilisateur
+   - La première personne préférée est affectée au maximum de sa capacité, puis la deuxième, etc.
+   - Si toutes les personnes préférées n'ont pas assez de jours disponibles pour couvrir tout le chiffrage, le reste est complété par les autres membres selon la priorité des rôles (ci-dessous)
+   - Si la préférence est "Pas de préférence", appliquer la logique standard de priorité des rôles
+
 ### Priorité des rôles
-8. **Priorité aux rôles principaux** — pour chaque tâche, affecter dans cet ordre :
+9. **Priorité aux rôles principaux** — pour chaque tâche, après avoir affecté la personne préférée (si applicable), compléter dans cet ordre :
    - **Étape 1** : Membres dont le `rolePrincipal` correspond à la tâche
    - **Étape 2** : Si le chiffrage n'est pas couvert, compléter avec les membres dont le `roleSecondaire` correspond
    - **Étape 3** : Si toujours pas couvert, compléter avec les membres sans rôle défini (champs vides)
@@ -38,7 +46,7 @@ L'utilisateur ou l'agent a déjà fourni :
    - Correspondance : `Spec` ↔ "Spec", `Dev` ↔ "Dev", `Tests` ↔ "Tests", `Retour dev` ↔ "Dev"
 
 ### Ordonnancement des tâches
-9. **Enchaînement séquentiel strict** pour chaque projet :
+10. **Enchaînement séquentiel strict** pour chaque projet :
    - **Spec → Dev** : le Dev ne peut pas commencer avant la fin de la Spec (dernier jour de Spec < premier jour de Dev)
    - **Dev → Tests** : les Tests ne peuvent pas commencer avant la fin du Dev
    - **Dev → Retour dev** : le Retour dev peut commencer en même temps que les Tests ou après, mais jamais avant la fin du Dev
@@ -95,9 +103,10 @@ Date : JJ/MM/AAAA
 Pour chaque projet **non en échec**, dans l'ordre des tâches (Spec → Dev → Tests / Retour dev) :
 
 1. Déterminer la date de début effective (max entre date début projet et fin tâche précédente + 1 jour ouvré)
-2. Sélectionner les membres éligibles par priorité de rôle (principal → secondaire → sans rôle)
-3. Répartir le chiffrage de la tâche sur les jours ouvrés disponibles des membres sélectionnés
-4. Stocker les affectations : `{ projetId, tache }` pour chaque jour
+2. Si des préférences utilisateur existent pour cette tâche, affecter les personnes préférées en priorité **dans l'ordre de sélection** (chacune sur ses jours disponibles, l'une après l'autre)
+3. Compléter avec les membres éligibles par priorité de rôle (principal → secondaire → sans rôle) si le chiffrage n'est pas encore couvert après toutes les personnes préférées
+4. Répartir le chiffrage restant sur les jours ouvrés disponibles des membres sélectionnés
+5. Stocker les affectations : `{ projetId, tache }` pour chaque jour
 
 ### 5. Proposer le plan
 

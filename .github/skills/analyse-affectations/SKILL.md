@@ -106,6 +106,71 @@ questions:
 
 Ne jamais demander les dates de plusieurs projets dans un même appel. Attendre la réponse avant de passer au projet suivant.
 
+### 6. Demander les préférences de personnes
+
+Après avoir collecté les dates de **tous** les projets, demander pour chaque projet les préférences de personnes par tâche à planifier.
+
+**Processus séquentiel** : pour chaque projet (1 par 1), utiliser `vscode_askQuestions` avec une question par tâche à planifier. Ne poser la question que pour les tâches dont le chiffrage > 0 et qui ne sont pas déjà planifiées.
+
+Pour chaque tâche du projet, proposer la liste des membres éligibles (rôle principal, puis secondaire, puis sans rôle) plus l'option "Pas de préférence". **L'utilisateur peut sélectionner plusieurs personnes** pour une même tâche.
+
+```
+questions:
+  - header: "Projet 1/N — Nom du projet — Préférences"
+    question: "Préférence(s) pour la Spec ? (plusieurs choix possibles, séparés par des virgules, ou 'Pas de préférence')"
+    options:
+      - label: "Pas de préférence"
+        description: "L'agent choisira automatiquement selon les rôles et disponibilités"
+        recommended: true
+      - label: "Prénom Nom"
+        description: "Rôle principal : Spec — X jours disponibles"
+      - label: "Prénom Nom2"
+        description: "Rôle secondaire : Spec — Y jours disponibles"
+  - header: "Projet 1/N — Nom du projet — Préférences"
+    question: "Préférence(s) pour le Dev ? (plusieurs choix possibles, séparés par des virgules, ou 'Pas de préférence')"
+    options:
+      - label: "Pas de préférence"
+        description: "L'agent choisira automatiquement selon les rôles et disponibilités"
+        recommended: true
+      - label: "Prénom Nom"
+        description: "Rôle principal : Dev — X jours disponibles"
+      - label: "Prénom Nom2"
+        description: "Rôle secondaire : Dev — Y jours disponibles"
+  - header: "Projet 1/N — Nom du projet — Préférences"
+    question: "Préférence(s) pour les Tests ? (plusieurs choix possibles, séparés par des virgules, ou 'Pas de préférence')"
+    options:
+      - label: "Pas de préférence"
+        description: "L'agent choisira automatiquement selon les rôles et disponibilités"
+        recommended: true
+      - label: "Prénom Nom"
+        description: "Rôle principal : Tests — X jours disponibles"
+      - label: "Prénom Nom2"
+        description: "Rôle secondaire : Tests — Y jours disponibles"
+  - header: "Projet 1/N — Nom du projet — Préférences"
+    question: "Préférence(s) pour le Retour Dev ? (plusieurs choix possibles, séparés par des virgules, ou 'Pas de préférence')"
+    options:
+      - label: "Pas de préférence"
+        description: "L'agent choisira automatiquement selon les rôles et disponibilités"
+        recommended: true
+      - label: "Prénom Nom"
+        description: "Rôle principal : Dev — X jours disponibles"
+      - label: "Prénom Nom2"
+        description: "Rôle secondaire : Dev — Y jours disponibles"
+```
+
+1. Poser les questions de préférence pour le **premier projet** uniquement (toutes les tâches à planifier de ce projet dans un même appel)
+2. Attendre la réponse de l'utilisateur
+3. Poser les questions pour le **projet suivant**
+4. Répéter jusqu'à avoir toutes les préférences
+
+**Règles** :
+- Ne proposer que les membres actifs de l'équipe
+- L'option "Pas de préférence" est toujours `recommended: true`
+- **L'utilisateur peut choisir plusieurs personnes** pour une même tâche — dans ce cas, toutes les personnes choisies sont traitées comme préférées et affectées en priorité (dans l'ordre de sélection)
+- Si la réponse contient plusieurs noms séparés par des virgules, les interpréter comme une sélection multiple
+- Si une tâche n'a qu'un seul membre éligible, le mentionner mais proposer quand même le choix
+- Les préférences (liste de personnes par tâche) sont transmises au skill `executer-affectations` avec les dates
+
 ## Références
 
 - [Structure des stores](./references/structures-donnees.md)

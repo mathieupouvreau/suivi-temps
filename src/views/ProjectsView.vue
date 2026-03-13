@@ -70,8 +70,8 @@ const supprimerProjet = (id) => {
  */
 const exporterCSV = () => {
   const csv = [
-    'ID,Nom,Chiffrage,Spec,Dev,Tests,Retour dev',
-    ...projetsStore.projets.map(p => `${p.id},"${p.nom}",${p.chiffrage || 0},${p.spec || 0},${p.dev || 0},${p.tests || 0},${p.retourDev || 0}`)
+    'ID,Nom,Chiffrage,Spec,Spec Pers.,Dev,Dev Pers.,Tests,Tests Pers.,Retour dev,Retour dev Pers.',
+    ...projetsStore.projets.map(p => `${p.id},"${p.nom}",${p.chiffrage || 0},${p.spec || 0},${p.specPersonnes || 1},${p.dev || 0},${p.devPersonnes || 1},${p.tests || 0},${p.testsPersonnes || 1},${p.retourDev || 0},${p.retourDevPersonnes || 1}`)
   ].join('\n')
 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
@@ -95,33 +95,27 @@ const importerCSV = async (event) => {
   const text = await file.text()
   const lignes = text.split('\n').filter(l => l.trim())
 
-  const donnees = lignes.slice(1).map(ligne => {
-    const match = ligne.match(/^(\d+),"?([^"]+?)"?,?(\d*),?(\d*),?(\d*),?(\d*),?(\d*)$/)
-    if (match) {
-      return {
-        id: Number.parseInt(match[1]),
-        nom: match[2].trim(),
-        chiffrage: Number.parseInt(match[3]) || 0,
-        spec: Number.parseInt(match[4]) || 0,
-        dev: Number.parseInt(match[5]) || 0,
-        tests: Number.parseInt(match[6]) || 0,
-        retourDev: Number.parseInt(match[7]) || 0
-      }
+  /** Parse une ligne CSV en extrayant l'ID, le nom (avec guillemets) et les valeurs numériques */
+  const parseLigneCSV = (ligne) => {
+    const matchNom = ligne.match(/^(\d+),"?([^"]+?)"?,(.*)$/)
+    if (!matchNom) return null
+    const valeurs = matchNom[3].split(',')
+    return {
+      id: Number.parseInt(matchNom[1]),
+      nom: matchNom[2].trim(),
+      chiffrage: Number.parseInt(valeurs[0]) || 0,
+      spec: Number.parseInt(valeurs[1]) || 0,
+      specPersonnes: Number.parseInt(valeurs[2]) || 1,
+      dev: Number.parseInt(valeurs[3]) || 0,
+      devPersonnes: Number.parseInt(valeurs[4]) || 1,
+      tests: Number.parseInt(valeurs[5]) || 0,
+      testsPersonnes: Number.parseInt(valeurs[6]) || 1,
+      retourDev: Number.parseInt(valeurs[7]) || 0,
+      retourDevPersonnes: Number.parseInt(valeurs[8]) || 1
     }
-    const parts = ligne.split(',')
-    if (parts.length >= 2) {
-      return {
-        id: Number.parseInt(parts[0]),
-        nom: parts[1].replaceAll('"', '').trim(),
-        chiffrage: Number.parseInt(parts[2]) || 0,
-        spec: Number.parseInt(parts[3]) || 0,
-        dev: Number.parseInt(parts[4]) || 0,
-        tests: Number.parseInt(parts[5]) || 0,
-        retourDev: Number.parseInt(parts[6]) || 0
-      }
-    }
-    return null
-  }).filter(p => p && p.id && p.nom)
+  }
+
+  const donnees = lignes.slice(1).map(parseLigneCSV).filter(p => p && p.id && p.nom)
 
   if (donnees.length > 0) {
     projetsStore.chargerProjets(donnees)
@@ -160,13 +154,23 @@ const importerCSV = async (event) => {
     <table v-if="projetsStore.projets.length > 0">
       <thead>
         <tr>
-          <th>Nom</th>
-          <th>Chiffrage</th>
-          <th>Spec</th>
-          <th>Dev</th>
-          <th>Tests</th>
-          <th>Retour dev</th>
-          <th>Actions</th>
+          <th scope="col" rowspan="2">Nom</th>
+          <th scope="col" rowspan="2">Chiffrage</th>
+          <th scope="colgroup" colspan="2">Spec</th>
+          <th scope="colgroup" colspan="2">Dev</th>
+          <th scope="colgroup" colspan="2">Tests</th>
+          <th scope="colgroup" colspan="2">Retour dev</th>
+          <th scope="col" rowspan="2">Actions</th>
+        </tr>
+        <tr>
+          <th scope="col">Jours</th>
+          <th scope="col">Pers.</th>
+          <th scope="col">Jours</th>
+          <th scope="col">Pers.</th>
+          <th scope="col">Jours</th>
+          <th scope="col">Pers.</th>
+          <th scope="col">Jours</th>
+          <th scope="col">Pers.</th>
         </tr>
       </thead>
       <tbody>
@@ -177,9 +181,13 @@ const importerCSV = async (event) => {
             <span v-if="chiffrageInvalide(projet)" :class="ecartChiffrage(projet) <= 0 ? 'erreur-msg-rouge' : 'erreur-msg-vert'" :title="`Attendu : ${sommeDetails(projet)} (écart : ${ecartChiffrage(projet) > 0 ? '+' : ''}${ecartChiffrage(projet)})`">&#9888;</span>
           </td>
           <td><input type="number" v-model.number="projet.spec" min="0" class="input-chiffre" /></td>
+          <td><input type="number" v-model.number="projet.specPersonnes" min="1" class="input-chiffre input-personnes" /></td>
           <td><input type="number" v-model.number="projet.dev" min="0" class="input-chiffre" /></td>
+          <td><input type="number" v-model.number="projet.devPersonnes" min="1" class="input-chiffre input-personnes" /></td>
           <td><input type="number" v-model.number="projet.tests" min="0" class="input-chiffre" /></td>
+          <td><input type="number" v-model.number="projet.testsPersonnes" min="1" class="input-chiffre input-personnes" /></td>
           <td><input type="number" v-model.number="projet.retourDev" min="0" class="input-chiffre" /></td>
+          <td><input type="number" v-model.number="projet.retourDevPersonnes" min="1" class="input-chiffre input-personnes" /></td>
           <td>
             <button @click="supprimerProjet(projet.id)" class="btn-supprimer">Supprimer</button>
           </td>
@@ -199,6 +207,9 @@ const importerCSV = async (event) => {
   padding: 4px;
   border: 1px solid #ccc;
   border-radius: 4px;
+}
+.input-personnes {
+  width: 50px;
 }
 .input-erreur {
   border-color: #e74c3c;
