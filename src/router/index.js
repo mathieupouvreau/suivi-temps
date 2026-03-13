@@ -1,8 +1,10 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import AnneeView from '../views/AnneeView.vue'
+import HolidaysView from '../views/HolidaysView.vue'
 import EquipeView from '../views/EquipeView.vue'
 import TypesJoursView from '../views/TypesJoursView.vue'
+import ProjetView from '../views/ProjetView.vue'
+import ProjectsView from '../views/ProjectsView.vue'
 
 /**
  * Configuration du routeur Vue Router
@@ -10,10 +12,12 @@ import TypesJoursView from '../views/TypesJoursView.vue'
  * (pas besoin de configuration serveur pour les routes)
  *
  * Routes disponibles :
- * - / : Page d'accueil avec la liste des années
- * - /annee/:annee : Vue détaillée d'une année avec calendriers mensuels
- * - /equipe : Gestion de l'équipe (ajout/suppression de membres)
- * - /types-jours : Liste des types de jours avec aperçu des couleurs
+ * - /                  → HomeView : page d'accueil avec la liste des années
+ * - /annee/:annee      → HolidaysView : calendrier congés/absences d'une année
+ * - /equipe            → EquipeView : gestion des membres de l'équipe
+ * - /calendrier/:annee → ProjetView : calendrier des affectations projet d'une année
+ * - /projets           → ProjectsView : gestion des projets (CRUD + chiffrage)
+ * - /types-jours       → TypesJoursView : référentiel des types de jours avec aperçu couleurs
  */
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -26,12 +30,22 @@ const router = createRouter({
     {
       path: '/annee/:annee',  // Paramètre dynamique :annee (ex: /annee/2025)
       name: 'annee',
-      component: AnneeView
+      component: HolidaysView
     },
     {
       path: '/equipe',
       name: 'equipe',
       component: EquipeView
+    },
+    {
+      path: '/calendrier/:annee',  // Paramètre dynamique :annee (ex: /calendrier/2025)
+      name: 'calendrier',
+      component: ProjetView
+    },
+    {
+      path: '/projets',
+      name: 'projets',
+      component: ProjectsView
     },
     {
       path: '/types-jours',

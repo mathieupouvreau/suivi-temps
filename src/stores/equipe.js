@@ -53,7 +53,9 @@ export const useEquipeStore = defineStore('equipe', () => {
       membres.value.push({
         id: nouvelId,
         nom: nomTrimmed,
-        actif: true
+        actif: true,
+        rolePrincipal: '',
+        roleSecondaire: ''
       })
     }
   }

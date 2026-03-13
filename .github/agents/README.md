@@ -1,0 +1,282 @@
+# Agent d'affectation automatique — Documentation
+
+## Vue d'ensemble
+
+L'agent **affectation-auto** permet de planifier automatiquement l'affectation des membres de l'équipe aux projets. Il fonctionne en deux étapes via des skills spécialisés.
+
+```
+Utilisateur                   Agent                         Fichiers
+    │                           │                              │
+    │  Exporter les données     │                              │
+    │  depuis l'application ──────────────────────────────────▶│ data/equipe.csv
+    │                           │                              │ data/projets.csv
+    │                           │                              │ data/jours.json
+    │                           │                              │ data/affectations.json
+    │                           │                              │
+    │  @affectation-auto ──────▶│                              │
+    │                           │                              │
+    │                           │ ── Étape 1 : Analyse ───────▶│ Lecture des 4 fichiers
+    │                           │                              │
+    │  ◀── Diagnostic ─────────│                              │
+    │  ◀── Demande de dates ───│                              │
+    │                           │                              │
+    │  Réponse dates ──────────▶│                              │
+    │                           │                              │
+    │                           │ ── Étape 2 : Affectation ──▶│
+    │                           │                              │
+    │  ◀── Plan récapitulatif ─│                              │
+    │                           │                              │
+    │  Validation ─────────────▶│                              │
+    │                           │                              │
+    │                           │ ── Génération ──────────────▶│ data/affectations.json
+    │                           │                              │ data/rapport-affectations.md
+    │                           │                              │
+    │  Réimporter dans l'app    │                              │
+    │  via "Importer (JSON)" ◀─────────────────────────────────│
+    │                           │                              │
+```
+
+## Structure des fichiers
+
+```
+.github/
+  agents/
+    affectation-auto.agent.md              # Agent orchestrateur
+  skills/
+    analyse-affectations/
+      SKILL.md                             # Skill 1 : diagnostic
+      references/
+        structures-donnees.md              # Référence : formats de données
+    executer-affectations/
+      SKILL.md                             # Skill 2 : affectation
+      references/
+        structures-donnees.md              # Référence : formats de données
+data/                                      # Dossier des données (à la racine)
+  equipe.csv                               # Entrée : membres
+  projets.csv                              # Entrée : projets
+  jours.json                               # Entrée : absences
+  affectations.json                        # Entrée/Sortie : affectations
+  rapport-affectations.md                  # Sortie : rapport d'échec
+```
+
+---
+
+## Fichiers d'entrée
+
+### `data/equipe.csv`
+
+Exporté depuis la vue **Équipe** (`/equipe`) → bouton **Exporter CSV**.
+
+| Colonne | Description | Exemple |
+|---------|-------------|---------|
+| ID | Identifiant unique du membre | `1` |
+| Nom | Nom complet (entre guillemets) | `"Jean Dupont"` |
+| Rôle principal | Rôle principal : Spec, Dev, Tests (ou vide) | `"Dev"` |
+| Rôle secondaire | Rôle secondaire (ou vide) | `"Tests"` |
+
+```csv
+ID,Nom,Rôle principal,Rôle secondaire
+1,"Jean Dupont","Dev","Tests"
+2,"Marie Martin","Spec",""
+3,"Paul Durand","Tests","Dev"
+```
+
+### `data/projets.csv`
+
+Exporté depuis la vue **Projets** (`/projets`) → bouton **Exporter CSV**.
+
+| Colonne | Description | Exemple |
+|---------|-------------|---------|
+| ID | Identifiant unique du projet | `1` |
+| Nom | Nom du projet (entre guillemets) | `"Mon Projet"` |
+| Chiffrage | Chiffrage total en jours | `50` |
+| Spec | Jours de spécification | `5` |
+| Dev | Jours de développement | `30` |
+| Tests | Jours de tests | `10` |
+| Retour dev | Jours de retour dev | `5` |
+
+```csv
+ID,Nom,Chiffrage,Spec,Dev,Tests,Retour dev
+1,"Mon Projet",50,5,30,10,5
+2,"Autre Projet",20,2,12,4,2
+```
+
+### `data/jours.json`
+
+Exporté depuis la vue **Calendrier absences** (`/annee/:annee`) → bouton **Exporter les jours (JSON)**.
+
+Structure imbriquée : `annee > personneId > moisIndex > jour = typeId`
+
+| Clé | Description | Valeurs |
+|-----|-------------|---------|
+| annee | Année | `"2026"` |
+| personneId | ID du membre | `"1"` |
+| moisIndex | Mois (0 = Janvier, 11 = Décembre) | `"0"` à `"11"` |
+| jour | Numéro du jour | `"1"` à `"31"` |
+| typeId | Type de jour | `CP`, `1/2CP`, `Fe`, `1/2Fe`, `Arr`, `1/2Arr`, `For`, `1/2For`, `Cli`, `1/2Cli` |
+
+```json
+{
+  "2026": {
+    "1": {
+      "0": { "1": "Fe", "15": "CP" },
+      "7": { "10": "CP", "11": "CP" }
+    }
+  }
+}
+```
+
+> Les types préfixés `1/2` comptent pour **0.5 jour** (demi-journée disponible pour un projet).
+
+### `data/affectations.json`
+
+Exporté depuis la vue **Calendrier projets** (`/calendrier/:annee`) → bouton **Exporter (JSON)**.
+
+Ce fichier **peut être absent** si aucune affectation n'existe encore.
+
+Structure imbriquée : `annee > personneId > moisIndex > jour = { projetId, tache }`
+
+| Clé | Description | Valeurs |
+|-----|-------------|---------|
+| projetId | ID du projet | Entier |
+| tache | Type de tâche | `Spec`, `Dev`, `Tests`, `Retour dev` |
+
+```json
+{
+  "2026": {
+    "1": {
+      "0": {
+        "5": { "projetId": 1, "tache": "Dev" },
+        "6": { "projetId": 1, "tache": "Dev" }
+      }
+    }
+  }
+}
+```
+
+---
+
+## Fichiers de sortie
+
+### `data/affectations.json`
+
+Fichier principal généré par le skill `executer-affectations`. Contient :
+- Toutes les affectations **existantes** (conservées intégralement)
+- Les **nouvelles affectations** générées (projets faisables uniquement)
+
+**Même format** que le fichier d'entrée. À réimporter dans l'application via la vue **Calendrier projets** → bouton **Importer (JSON)**.
+
+### `data/rapport-affectations.md`
+
+Fichier généré **uniquement si des projets sont en échec** (ressources insuffisantes). Contient pour chaque projet exclu :
+
+| Section | Contenu |
+|---------|---------|
+| Raison | Cause de l'exclusion (ressources, fenêtre de dates) |
+| Tableau par tâche | Chiffrage demandé vs jours disponibles |
+| Membres éligibles | Liste des membres avec leur disponibilité |
+| Suggestion | Pistes pour résoudre le problème |
+
+---
+
+## Skills
+
+### `/analyse-affectations` — Diagnostic
+
+**Objectif** : Lire les fichiers exportés et identifier ce qui reste à planifier.
+
+| Étape | Action |
+|-------|--------|
+| 1 | Lire et parser les 4 fichiers de données |
+| 2 | Identifier les tâches déjà planifiées par projet |
+| 3 | Filtrer les tâches restantes (non planifiées, chiffrage > 0) |
+| 4 | Afficher le diagnostic (projets à planifier, projets ignorés, équipe) |
+| 5 | Demander les dates de début et de fin par projet |
+
+**Entrées** : `data/equipe.csv`, `data/projets.csv`, `data/jours.json`, `data/affectations.json`
+**Sortie** : Diagnostic affiché dans le chat + collecte des dates
+
+### `/executer-affectations` — Affectation
+
+**Objectif** : Générer les affectations en respectant toutes les contraintes.
+
+| Étape | Action |
+|-------|--------|
+| 1 | Calculer la disponibilité de chaque membre par projet |
+| 2 | Vérifier la faisabilité (chiffrage vs ressources disponibles) |
+| 3 | Générer le rapport d'échec si nécessaire |
+| 4 | Affecter les projets faisables (rôle principal → secondaire → sans rôle) |
+| 5 | Proposer le plan récapitulatif et attendre validation |
+| 6 | Générer `data/affectations.json` et `data/rapport-affectations.md` |
+
+**Entrées** : `data/equipe.csv`, `data/projets.csv`, `data/jours.json`, `data/affectations.json`, dates fournies par l'utilisateur
+**Sorties** : `data/affectations.json`, `data/rapport-affectations.md` (si échecs)
+
+---
+
+## Contraintes métier
+
+### Jours disponibles
+- Pas d'affectation sur les **week-ends** (samedi, dimanche)
+- Pas d'affectation sur les **jours fériés** (type `Fe`)
+- Pas d'affectation sur les **jours typés** (CP, Arr, For, Cli, etc.)
+- Les **demi-journées** (`1/2*`) laissent 0.5 jour disponible
+
+### Tâches
+- Ne **jamais replanifier** une tâche déjà affectée
+- **Ordonnancement strict** : Spec → Dev → Tests / Retour dev
+
+```
+ Spec ──▶ Dev ──▶ Tests
+                  Retour dev  (en parallèle des Tests ou après)
+```
+
+### Priorité des rôles
+1. Membres avec **rôle principal** correspondant
+2. Membres avec **rôle secondaire** correspondant (seulement si le chiffrage n'est pas couvert)
+3. Membres **sans rôle** défini (en dernier recours)
+
+| Tâche | Rôle correspondant |
+|-------|-------------------|
+| Spec | Spec |
+| Dev | Dev |
+| Tests | Tests |
+| Retour dev | Dev |
+
+### Manque de ressources
+Si une tâche d'un projet ne peut pas être couverte → le **projet entier est exclu** et documenté dans `data/rapport-affectations.md`.
+
+---
+
+## Comment utiliser
+
+### 1. Exporter les données
+
+Depuis l'application, exporter les 4 fichiers :
+
+| Vue | Bouton | Fichier à renommer |
+|-----|--------|--------------------|
+| `/equipe` | Exporter CSV | → `data/equipe.csv` |
+| `/projets` | Exporter CSV | → `data/projets.csv` |
+| `/annee/:annee` | Exporter les jours (JSON) | → `data/jours.json` |
+| `/calendrier/:annee` | Exporter (JSON) | → `data/affectations.json` |
+
+### 2. Lancer l'agent
+
+Dans le chat Copilot, sélectionner **`@affectation-auto`** ou utiliser les skills directement :
+- `/analyse-affectations` pour le diagnostic seul
+- `/executer-affectations` pour lancer l'affectation (après analyse)
+
+### 3. Répondre aux questions
+
+L'agent demandera pour chaque projet :
+- **Date de début** (JJ/MM/AAAA)
+- **Date de fin** (JJ/MM/AAAA)
+
+### 4. Valider le plan
+
+L'agent propose un tableau récapitulatif. Valider pour générer les fichiers.
+
+### 5. Réimporter
+
+Réimporter `data/affectations.json` dans l'application via la vue **Calendrier projets** → bouton **Importer (JSON)**.
