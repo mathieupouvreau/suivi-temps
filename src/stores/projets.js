@@ -4,7 +4,8 @@ import { defineStore } from 'pinia'
 /**
  * Store de gestion des projets
  * Maintient la liste des projets avec leur chiffrage ventilé par tâche
- * Structure : { id, nom, chiffrage, spec, dev, tests, retourDev }
+ * Structure : { id, nom, chiffrage, spec, dev, tests, retourDev, specPersonnes, devPersonnes, testsPersonnes, retourDevPersonnes }
+ * Les champs *Personnes indiquent le nombre de personnes pouvant effectuer chaque tâche (défaut : 1)
  * Stocke les données dans localStorage avec la clé 'projets'
  */
 export const useProjetsStore = defineStore('projets', () => {
@@ -32,7 +33,7 @@ export const useProjetsStore = defineStore('projets', () => {
     const nouvelId = projets.value.length > 0
       ? Math.max(...projets.value.map(p => p.id)) + 1
       : 1
-    projets.value.push({ id: nouvelId, nom: nomTrimmed, chiffrage: 0, spec: 0, dev: 0, tests: 0, retourDev: 0 })
+    projets.value.push({ id: nouvelId, nom: nomTrimmed, chiffrage: 0, spec: 0, dev: 0, tests: 0, retourDev: 0, specPersonnes: 1, devPersonnes: 1, testsPersonnes: 1, retourDevPersonnes: 1 })
   }
 
   /**
