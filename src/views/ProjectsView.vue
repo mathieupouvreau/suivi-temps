@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProjetsStore } from '../stores/projets'
 import Modal from '../components/Modal.vue'
@@ -18,8 +18,16 @@ const projetsStore = useProjetsStore()
 
 // État de la modal d'information
 const nouveauProjet = ref('')
+const filtreRecherche = ref('')
 const showModal = ref(false)
 const modalMessage = ref('')
+
+/** Liste des projets filtrée par le champ de recherche */
+const projetsFiltres = computed(() => {
+  const terme = filtreRecherche.value.trim().toLowerCase()
+  if (!terme) return projetsStore.projets
+  return projetsStore.projets.filter(p => p.nom.toLowerCase().includes(terme))
+})
 
 /** Affiche une modal avec un message d'information */
 const afficherModal = (message) => {
@@ -140,7 +148,17 @@ const importerJSON = async (event) => {
       </div>
     </div>
 
-    <table v-if="projetsStore.projets.length > 0">
+    <div v-if="projetsStore.projets.length > 0" class="filtre-section">
+      <input
+        v-model="filtreRecherche"
+        type="text"
+        placeholder="🔍 Filtrer les projets par nom..."
+        class="input-filtre"
+      />
+      <span class="filtre-compteur">{{ projetsFiltres.length }} / {{ projetsStore.projets.length }} projet(s)</span>
+    </div>
+
+    <table v-if="projetsFiltres.length > 0">
       <thead>
         <tr>
           <th scope="col" rowspan="2">Nom</th>
@@ -163,7 +181,7 @@ const importerJSON = async (event) => {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="projet in projetsStore.projets" :key="projet.id" :class="{ 'ligne-erreur': chiffrageInvalide(projet) }">
+        <tr v-for="projet in projetsFiltres" :key="projet.id" :class="{ 'ligne-erreur': chiffrageInvalide(projet) }">
           <td>{{ projet.nom }}</td>
           <td>
             <input type="number" v-model.number="projet.chiffrage" min="0" class="input-chiffre" :class="{ 'input-erreur': chiffrageInvalide(projet) }" />
@@ -183,7 +201,8 @@ const importerJSON = async (event) => {
         </tr>
       </tbody>
     </table>
-    <p v-else>Aucun projet pour le moment.</p>
+    <p v-else-if="projetsStore.projets.length === 0">Aucun projet pour le moment.</p>
+    <p v-else>Aucun projet ne correspond au filtre.</p>
 
     <Modal :show="showModal" :message="modalMessage" @close="fermerModal" />
   </div>
@@ -218,5 +237,28 @@ const importerJSON = async (event) => {
 }
 .ligne-erreur {
   background-color: #fdf2f0;
+}
+.filtre-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.input-filtre {
+  flex: 1;
+  max-width: 350px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95em;
+}
+.input-filtre:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+.filtre-compteur {
+  color: #888;
+  font-size: 0.9em;
 }
 </style>

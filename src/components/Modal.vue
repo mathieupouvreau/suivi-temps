@@ -18,7 +18,7 @@ const emit = defineEmits(['close'])
 <template>
   <div v-if="show" class="modal-overlay" @click="emit('close')">
     <div class="modal-content" @click.stop>
-      <p>{{ message }}</p>
+      <p style="white-space: pre-line">{{ message }}</p>
       <button @click="emit('close')">OK</button>
     </div>
   </div>

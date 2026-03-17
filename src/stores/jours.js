@@ -1,5 +1,6 @@
 import { ref, watch } from 'vue'
 import { defineStore } from 'pinia'
+import { useAffectationsProjetsStore } from './affectationsProjets'
 
 /**
  * Store de gestion des jours typés
@@ -55,6 +56,15 @@ export const useJoursStore = defineStore('jours', () => {
       jours.value[annee][personneId][moisIndex] = {}
     }
     jours.value[annee][personneId][moisIndex][jour] = typeId
+
+    // Retirer l'affectation projet sur ce jour (un congé remplace l'affectation)
+    const affectationsStore = useAffectationsProjetsStore()
+    const affectationExistante = affectationsStore.getProjetJour(annee, personneId, moisIndex, jour)
+    if (affectationExistante) {
+      affectationsStore.clearProjetJour(annee, personneId, moisIndex, jour)
+      return { projetId: affectationExistante.projetId, tache: affectationExistante.tache }
+    }
+    return null
   }
 
   /**

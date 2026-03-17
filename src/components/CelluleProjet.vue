@@ -22,6 +22,14 @@ const showMenu = ref(false)              // Affichage du menu déroulant
 const etape = ref('projet')              // Étape du menu : 'projet' (choix projet) ou 'tache' (choix tâche)
 const projetChoisi = ref(null)           // Projet sélectionné en étape 1 (avant choix de tâche)
 const celluleRef = ref(null)             // Référence DOM pour détecter les clics extérieurs
+const filtreProjet = ref('')             // Filtre de recherche dans la liste des projets
+
+/** Liste des projets filtrée par le champ de recherche */
+const projetsFiltres = computed(() => {
+  const terme = filtreProjet.value.trim().toLowerCase()
+  if (!terme) return projetsStore.projets
+  return projetsStore.projets.filter(p => p.nom.toLowerCase().includes(terme))
+})
 
 /** Extrait l'ID du projet depuis la prop affectation (supporte l'ancien et le nouveau format) */
 const projetId = computed(() => {
@@ -66,6 +74,7 @@ const toggleMenu = () => {
   showMenu.value = !showMenu.value
   etape.value = 'projet'
   projetChoisi.value = null
+  filtreProjet.value = ''
 }
 
 /** Étape 1 : sélectionne un projet et passe à l'étape 2 (choix de tâche) */
@@ -92,6 +101,7 @@ const clearProjet = () => {
 const retourProjets = () => {
   etape.value = 'projet'
   projetChoisi.value = null
+  filtreProjet.value = ''
 }
 
 /** Ferme le menu si l'utilisateur clique en dehors de la cellule */
@@ -141,8 +151,16 @@ const getCouleur = (id) => {
 
     <div v-if="showMenu" class="menu-projets" @click.stop>
       <template v-if="etape === 'projet'">
+        <input
+          v-if="projetsStore.projets.length > 4"
+          v-model="filtreProjet"
+          type="text"
+          placeholder="🔍 Filtrer..."
+          class="menu-projet-filtre"
+          @click.stop
+        />
         <button
-          v-for="projet in projetsStore.projets"
+          v-for="projet in projetsFiltres"
           :key="projet.id"
           @click="selectProjet(projet.id)"
           class="menu-projet-item"
@@ -150,6 +168,9 @@ const getCouleur = (id) => {
         >
           {{ projet.nom }}
         </button>
+        <div v-if="filtreProjet && projetsFiltres.length === 0" class="menu-projet-vide">
+          Aucun projet trouvé
+        </div>
         <button @click="clearProjet" class="menu-projet-clear">
           Effacer
         </button>
@@ -272,5 +293,28 @@ const getCouleur = (id) => {
 
 .menu-tache-item:hover {
   background: #eaf4ff;
+}
+
+.menu-projet-filtre {
+  display: block;
+  width: calc(100% - 16px);
+  margin: 6px 8px;
+  padding: 5px 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 0.82em;
+  outline: none;
+}
+
+.menu-projet-filtre:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.menu-projet-vide {
+  padding: 6px 10px;
+  color: #999;
+  font-size: 0.82em;
+  font-style: italic;
 }
 </style>

@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useEquipeStore } from '../stores/equipe'
 import { useJoursStore } from '../stores/jours'
+import { useProjetsStore } from '../stores/projets'
 import CelluleJour from '../components/CelluleJour.vue'
 import Modal from '../components/Modal.vue'
 import AffectationMasse from '../components/AffectationMasse.vue'
@@ -20,6 +21,21 @@ import { exporterJoursJSON } from '../services/export'
 const router = useRouter()
 const equipeStore = useEquipeStore()
 const joursStore = useJoursStore()
+const projetsStore = useProjetsStore()
+
+/**
+ * Construit un message d'alerte listant les affectations projets retirées
+ * @param {Array} suppressions - Liste des { personneId, moisIndex, jour, projetId, tache }
+ * @returns {string} Message formaté
+ */
+const construireMessageDesaffectations = (suppressions) => {
+  const lignes = suppressions.map(s => {
+    const projet = projetsStore.projets.find(p => p.id === s.projetId)
+    const nomProjet = projet ? projet.nom : `Projet #${s.projetId}`
+    return `• ${s.jour}/${s.moisIndex + 1} — ${nomProjet} (${s.tache})`
+  })
+  return `⚠️ Les affectations projet suivantes ont été retirées :\n\n${lignes.join('\n')}`
+}
 
 const route = useRoute()
 const annee = ref(parseInt(route.params.annee) || new Date().getFullYear())
@@ -88,7 +104,11 @@ const handleTypeChange = (personneId, moisIndex, jour, typeId) => {
   if (typeId === null) {
     joursStore.clearTypeJour(annee.value, personneId, moisIndex, jour)
   } else {
-    joursStore.setTypeJour(annee.value, personneId, moisIndex, jour, typeId)
+    const supprimee = joursStore.setTypeJour(annee.value, personneId, moisIndex, jour, typeId)
+    if (supprimee) {
+      const msg = construireMessageDesaffectations([{ personneId, moisIndex, jour, ...supprimee }])
+      afficherModal(msg)
+    }
   }
 }
 
@@ -130,18 +150,27 @@ const fermerAffectation = () => {
 
 const appliquerAffectation = ({ typeId, personnesIds, jours }) => {
   let count = 0
+  const suppressions = []
   personnesIds.forEach(personneId => {
     jours.forEach(({ moisIndex, jour }) => {
       if (typeId === null) {
         joursStore.clearTypeJour(annee.value, personneId, moisIndex, jour)
       } else {
-        joursStore.setTypeJour(annee.value, personneId, moisIndex, jour, typeId)
+        const supprimee = joursStore.setTypeJour(annee.value, personneId, moisIndex, jour, typeId)
+        if (supprimee) {
+          suppressions.push({ personneId, moisIndex, jour, ...supprimee })
+        }
       }
       count++
     })
   })
   showAffectation.value = false
-  afficherModal(`${count} jour(s) affecté(s)`)
+  if (suppressions.length > 0) {
+    const msg = `${count} jour(s) affecté(s)\n\n${construireMessageDesaffectations(suppressions)}`
+    afficherModal(msg)
+  } else {
+    afficherModal(`${count} jour(s) affecté(s)`)
+  }
 }
 
 const ouvrirCompteurs = () => {
