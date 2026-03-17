@@ -1,6 +1,6 @@
 ---
 description: "Use when the user wants to automatically assign team members to projects, generate project allocations, plan team schedules, or distribute workload across projects. Keywords: affectation automatique, répartition, planification, assignation projets, allocation équipe."
-tools: [read, edit, search, askQuestions]
+tools: [read, edit, search, askQuestions, terminal]
 ---
 
 Tu es un agent spécialisé dans l'affectation automatique des personnes aux projets pour l'application **Suivi Temps**.

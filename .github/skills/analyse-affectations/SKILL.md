@@ -109,29 +109,29 @@ Attendre la réponse avant de continuer.
 
 #### 5b. Saisie des dates
 
-**Si mêmes dates pour tous** : poser une seule paire de questions (début + fin) et appliquer les mêmes dates à tous les projets.
+**Si mêmes dates pour tous** : poser les deux questions (début + fin) dans un seul appel `vscode_askQuestions`. Utiliser des **headers distincts** pour que les deux réponses soient récupérées séparément.
 
 ```
 questions:
-  - header: "Dates communes — Projets : Nom Projet A, Nom Projet B, Nom Projet C"
+  - header: "Date de début (tous les projets)"
     question: "Date de début (JJ/MM/AAAA) ?"
-  - header: "Dates communes — Projets : Nom Projet A, Nom Projet B, Nom Projet C"
+  - header: "Date de fin (tous les projets)"
     question: "Date de fin (JJ/MM/AAAA) ?"
 ```
 
-**Si dates différentes par projet** : pour chaque projet (1 par 1), utiliser `vscode_askQuestions` en affichant le **nom du projet** dans le header :
+**Si dates différentes par projet** : pour chaque projet (1 par 1), utiliser `vscode_askQuestions` en affichant le **nom du projet** dans le header. Utiliser des **headers distincts** pour début et fin.
 
 ```
 questions:
-  - header: "Projet 1/N — Nom du projet (tâches : Spec, Dev)"
+  - header: "Projet 1/N — Nom du projet — Début"
     question: "Date de début (JJ/MM/AAAA) ?"
-  - header: "Projet 1/N — Nom du projet"
+  - header: "Projet 1/N — Nom du projet — Fin"
     question: "Date de fin (JJ/MM/AAAA) ?"
 ```
 
-1. Poser la question pour le **premier projet** uniquement
+1. Poser les deux questions (début + fin) pour le **premier projet** dans un seul appel
 2. Attendre la réponse de l'utilisateur
-3. Poser la question pour le **projet suivant**
+3. Poser les deux questions pour le **projet suivant**
 4. Répéter jusqu'à avoir toutes les dates
 
 Ne jamais demander les dates de plusieurs projets dans un même appel. Attendre la réponse avant de passer au projet suivant.
