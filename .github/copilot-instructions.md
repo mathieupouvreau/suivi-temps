@@ -1,7 +1,7 @@
 # Suivi Temps — Instructions Copilot
 
 ## Résumé du projet
-Application de suivi du temps d'équipe en français, construite avec Vue 3, Vite, Pinia et Vue Router. Elle gère les plannings des membres, les affectations projets et les types de jours (congés, fériés, etc.) avec persistance localStorage, sans backend.
+Application de suivi du temps d'équipe en français, construite avec Vue 3, Vite, Pinia et Vue Router. Elle gère les plannings des membres, les affectations projets et les types de jours (congés, fériés, etc.) avec persistance localStorage, sans backend. Elle inclut un moteur d'affectation automatique (assistant 5 étapes) qui répartit les tâches projet (Spec, Dev, Tests, Retour dev) sur les membres disponibles avec un algorithme en 2 passes, gap de 1 jour ouvré entre tâches et priorité Retour dev → même développeur.
 
 ## Stack technique
 - **Framework** : Vue 3.5 (Composition API avec `<script setup>`)
@@ -15,11 +15,14 @@ Application de suivi du temps d'équipe en français, construite avec Vue 3, Vit
 ```
 src/
   components/     # Composants Vue réutilisables
-  views/          # Composants de niveau route
+  views/          # Composants de niveau route (7 vues dont AffectationsAutoView)
   stores/         # Stores Pinia (equipe, annees, jours, projets, affectationsProjets)
+  services/       # Services métier (affectationsAuto.js, export.js)
   router/         # Configuration Vue Router
   config/         # Constantes et configuration (mois, jours, types)
   assets/         # Styles et ressources statiques
+documentation/    # Documentation métier (regles-affectation.md)
+data/             # Fichiers JSON de données (actuellement vide, peuplé via localStorage)
 ```
 
 ## Conventions de nommage
@@ -110,6 +113,7 @@ const handleClick = () => {
 6. **Toujours utiliser `<style scoped>`** pour éviter les collisions CSS
 7. **Toujours émettre des events depuis les composants enfants** au lieu de muter les props
 8. **Pas d'appels API / backend** — architecture 100% locale avec localStorage
+9. **Ne jamais utiliser `structuredClone()`** sur les données réactives Pinia (Proxy Vue) — provoque un `DataCloneError` silencieux. Toujours utiliser `JSON.parse(JSON.stringify(...))` pour cloner les données du store
 
 ## Structures de données principales
 
@@ -124,7 +128,10 @@ jours[annee][personneId][moisIndex][jour] = typeId
 { id: "CP", libelle: "Congé Payé", abreviation: "Congé", couleur: "#4CAF50", couleurTexte: "#FFFFFF" }
 
 // Projets
-{ id: 1, nom: "Nom Projet", chiffrage: 0, spec: 0, dev: 0, tests: 0, retourDev: 0 }
+{ id: 1, nom: "Nom Projet", chiffrage: 0, spec: 0, dev: 0, tests: 0, retourDev: 0, specPersonnes: 1, devPersonnes: 1, testsPersonnes: 1, retourDevPersonnes: 1 }
+
+// Affectations projets (structure imbriquée)
+affectations[annee][personneId][moisIndex][jour] = { projetId: 3, tache: 'Dev' }
 
 // Années
 [2025, 2026]
@@ -137,6 +144,7 @@ jours[annee][personneId][moisIndex][jour] = typeId
 - `/calendrier/:annee` → ProjetView (calendrier projets)
 - `/projets` → ProjectsView (liste des projets)
 - `/types-jours` → TypesJoursView (référentiel types de jours)
+- `/affectations-auto` → AffectationsAutoView (assistant d'affectation automatique en 5 étapes)
 
 ## Styles
 - CSS pur, pas de framework (pas de Tailwind, Bootstrap, etc.)

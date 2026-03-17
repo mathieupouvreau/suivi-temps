@@ -39,6 +39,11 @@ const voirCalendrier = (annee) => {
   router.push(`/calendrier/${annee}`)
 }
 
+/** Navigue vers la page d'affectation automatique */
+const voirAffectationsAuto = () => {
+  router.push('/affectations-auto')
+}
+
 /**
  * Ajoute une nouvelle année après validation
  * Validation : année entre 1900 et 2100
@@ -91,6 +96,7 @@ const exporterPourAgent = () => {
         style="padding: 0.5rem; width: 10rem;"
       />
       <button @click="ajouterAnnee">Ajouter année</button>
+      <button @click="voirAffectationsAuto" class="btn-affectation">Affectation auto</button>
       <button @click="exporterPourAgent" class="btn-export" title="Exporte equipe.json, projets.json, jours.json et affectations.json">Export agent</button>
     </div>
 

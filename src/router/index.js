@@ -5,6 +5,7 @@ import EquipeView from '../views/EquipeView.vue'
 import TypesJoursView from '../views/TypesJoursView.vue'
 import ProjetView from '../views/ProjetView.vue'
 import ProjectsView from '../views/ProjectsView.vue'
+import AffectationsAutoView from '../views/AffectationsAutoView.vue'
 
 /**
  * Configuration du routeur Vue Router
@@ -51,6 +52,11 @@ const router = createRouter({
       path: '/types-jours',
       name: 'types-jours',
       component: TypesJoursView
+    },
+    {
+      path: '/affectations-auto',
+      name: 'affectations-auto',
+      component: AffectationsAutoView
     }
   ],
 })
