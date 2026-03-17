@@ -36,7 +36,7 @@ Après validation du diagnostic et des dates, utilise le skill `executer-affecta
 - Calculer la disponibilité de chaque membre
 - Générer les affectations en respectant toutes les contraintes
 - Proposer un plan récapitulatif à l'utilisateur
-- Après validation, écrire le fichier `data/affectations.json`
+- Après validation, écrire le fichier `data/affectations-finales.json`
 
 ## Règles clés
 
@@ -53,4 +53,4 @@ Après validation du diagnostic et des dates, utilise le skill `executer-affecta
 - Ne modifie JAMAIS les stores, composants ou vues de l'application
 - Ne crée pas de nouveaux projets ou membres
 - Demande toujours confirmation avant de générer le fichier d'affectations
-- Le résultat est un fichier `data/affectations.json` que l'utilisateur réimporte via le bouton "Importer (JSON)"
+- Le résultat est un fichier `data/affectations-finales.json` que l'utilisateur réimporte via le bouton "Importer (JSON)"

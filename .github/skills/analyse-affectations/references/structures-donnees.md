@@ -11,9 +11,10 @@ ID,Nom,Rôle principal,Rôle secondaire
 
 ### projets.csv
 ```csv
-ID,Nom,Chiffrage,Spec,Dev,Tests,Retour dev
-1,"Mon Projet",50,5,30,10,5
+ID,Nom,Chiffrage,Spec,Spec Pers.,Dev,Dev Pers.,Tests,Tests Pers.,Retour dev,Retour dev Pers.
+1,"Mon Projet",50,5,1,30,2,10,1,5,1
 ```
+- Les colonnes `Pers.` indiquent le nombre max de personnes en parallèle par tâche (défaut : 1)
 
 ### jours.json
 ```json
@@ -48,7 +49,7 @@ ID,Nom,Chiffrage,Spec,Dev,Tests,Retour dev
 ## Stores de référence (code source)
 
 - `src/stores/equipe.js` — `{ id, nom, actif, rolePrincipal, roleSecondaire }`
-- `src/stores/projets.js` — `{ id, nom, chiffrage, spec, dev, tests, retourDev }`
+- `src/stores/projets.js` — `{ id, nom, chiffrage, spec, dev, tests, retourDev, specPersonnes, devPersonnes, testsPersonnes, retourDevPersonnes }`
 - `src/stores/jours.js` — `jours[annee][personneId][moisIndex][jour] = typeId`
 - `src/stores/affectationsProjets.js` — `affectations[annee][personneId][moisIndex][jour] = { projetId, tache }`
 - `src/config/constantes.js` — `MOIS` (noms des mois), `NOMS_JOURS` (Dim, Lun, Mar, etc.)

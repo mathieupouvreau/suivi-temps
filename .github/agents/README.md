@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-L'agent **affectation-auto** permet de planifier automatiquement l'affectation des membres de l'équipe aux projets. Il fonctionne en deux étapes via des skills spécialisés.
+L'agent **manager** permet de planifier automatiquement l'affectation des membres de l'équipe aux projets. Il fonctionne en deux étapes via des skills spécialisés.
 
 ```
 Utilisateur                   Agent                         Fichiers
@@ -13,7 +13,7 @@ Utilisateur                   Agent                         Fichiers
     │                           │                              │ data/jours.json
     │                           │                              │ data/affectations.json
     │                           │                              │
-    │  @affectation-auto ──────▶│                              │
+    │  @manager ─────────────────▶│                              │
     │                           │                              │
     │                           │ ── Étape 1 : Analyse ───────▶│ Lecture des 4 fichiers
     │                           │                              │
@@ -28,7 +28,7 @@ Utilisateur                   Agent                         Fichiers
     │                           │                              │
     │  Validation ─────────────▶│                              │
     │                           │                              │
-    │                           │ ── Génération ──────────────▶│ data/affectations.json
+    │                           │ ── Génération ──────────────▶│ data/affectations-finales.json
     │                           │                              │ data/rapport-affectations.md
     │                           │                              │
     │  Réimporter dans l'app    │                              │
@@ -41,7 +41,7 @@ Utilisateur                   Agent                         Fichiers
 ```
 .github/
   agents/
-    affectation-auto.agent.md              # Agent orchestrateur
+    manager.agent.md                       # Agent orchestrateur
   skills/
     analyse-affectations/
       SKILL.md                             # Skill 1 : diagnostic
@@ -158,7 +158,7 @@ Structure imbriquée : `annee > personneId > moisIndex > jour = { projetId, tach
 
 ## Fichiers de sortie
 
-### `data/affectations.json`
+### `data/affectations-finales.json`
 
 Fichier principal généré par le skill `executer-affectations`. Contient :
 - Toutes les affectations **existantes** (conservées intégralement)
@@ -207,10 +207,10 @@ Fichier généré **uniquement si des projets sont en échec** (ressources insuf
 | 3 | Générer le rapport d'échec si nécessaire |
 | 4 | Affecter les projets faisables (rôle principal → secondaire → sans rôle) |
 | 5 | Proposer le plan récapitulatif et attendre validation |
-| 6 | Générer `data/affectations.json` et `data/rapport-affectations.md` |
+| 6 | Générer `data/affectations-finales.json` et `data/rapport-affectations.md` |
 
 **Entrées** : `data/equipe.csv`, `data/projets.csv`, `data/jours.json`, `data/affectations.json`, dates fournies par l'utilisateur
-**Sorties** : `data/affectations.json`, `data/rapport-affectations.md` (si échecs)
+**Sorties** : `data/affectations-finales.json`, `data/rapport-affectations.md` (si échecs)
 
 ---
 
@@ -263,7 +263,7 @@ Depuis l'application, exporter les 4 fichiers :
 
 ### 2. Lancer l'agent
 
-Dans le chat Copilot, sélectionner **`@affectation-auto`** ou utiliser les skills directement :
+Dans le chat Copilot, sélectionner **`@manager`** ou utiliser les skills directement :
 - `/analyse-affectations` pour le diagnostic seul
 - `/executer-affectations` pour lancer l'affectation (après analyse)
 
@@ -279,4 +279,4 @@ L'agent propose un tableau récapitulatif. Valider pour générer les fichiers.
 
 ### 5. Réimporter
 
-Réimporter `data/affectations.json` dans l'application via la vue **Calendrier projets** → bouton **Importer (JSON)**.
+Réimporter `data/affectations-finales.json` dans l'application via la vue **Calendrier projets** → bouton **Importer (JSON)**.

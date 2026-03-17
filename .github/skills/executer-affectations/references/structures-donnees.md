@@ -11,9 +11,10 @@ ID,Nom,Rôle principal,Rôle secondaire
 
 ### projets.csv
 ```csv
-ID,Nom,Chiffrage,Spec,Dev,Tests,Retour dev
-1,"Mon Projet",50,5,30,10,5
+ID,Nom,Chiffrage,Spec,Spec Pers.,Dev,Dev Pers.,Tests,Tests Pers.,Retour dev,Retour dev Pers.
+1,"Mon Projet",50,5,1,30,2,10,1,5,1
 ```
+- Les colonnes `Pers.` indiquent le nombre max de personnes pouvant travailler en parallèle sur chaque tâche (défaut : 1 si absent)
 
 ### jours.json
 ```json
