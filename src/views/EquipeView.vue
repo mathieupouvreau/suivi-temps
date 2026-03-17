@@ -3,11 +3,12 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useEquipeStore } from '../stores/equipe'
 import Modal from '../components/Modal.vue'
+import { exporterEquipeJSON } from '../services/export'
 
 /**
  * Vue de gestion de l'équipe
  * Permet d'ajouter/supprimer des membres
- * Gère l'import/export CSV de l'équipe
+ * Gère l'import/export JSON de l'équipe
  * Utilise le soft-delete: les membres supprimés sont marqués inactifs
  */
 
@@ -40,68 +41,47 @@ const supprimerPersonne = (id) => {
   equipeStore.supprimerMembre(id)
 }
 
-/**
- * Exporte l'équipe au format CSV
- * Format: ID,Nom avec guillemets autour des noms
- * Nom du fichier: equipe_YYYY-MM-DD.csv
- */
-const exporterCSV = () => {
-const csv = [
-    'ID,Nom,Rôle principal,Rôle secondaire',
-    ...equipeStore.membres.map(p => `${p.id},"${p.nom}","${p.rolePrincipal || ''}","${p.roleSecondaire || ''}"`)
-  ].join('\n')
-
-  // Création du blob et téléchargement automatique
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = `equipe_${new Date().toISOString().split('T')[0]}.csv`
-  link.click()
-  URL.revokeObjectURL(link.href) // Libérer la mémoire
+/** Exporte l'équipe au format JSON via la fonction partagée */
+const exporterJSON = () => {
+  exporterEquipeJSON(equipeStore.membres)
 }
 
 /**
- * Importe une équipe depuis un fichier CSV
+ * Importe une équipe depuis un fichier JSON
  * Remplace l'équipe actuelle par les données du fichier
- * Format attendu: ID,Nom (avec ou sans guillemets)
+ * Format attendu : tableau d'objets { id, nom, actif, rolePrincipal, roleSecondaire }
  * @param {Event} event - Événement de changement du input file
  */
-const importerCSV = async (event) => {
+const importerJSON = async (event) => {
   const file = event.target.files[0]
   if (!file) return
 
-  const text = await file.text()
-  const lignes = text.split('\n').filter(l => l.trim())
+  try {
+    const text = await file.text()
+    const donnees = JSON.parse(text)
 
-  const donnees = lignes.slice(1).map(ligne => {
-    const match = ligne.match(/^(\d+),"?([^"]+?)"?,?"?([^"]*)"?,?"?([^"]*)"?$/)
-    if (match) {
-      return {
-        id: Number.parseInt(match[1]),
-        nom: match[2].trim(),
-        actif: true,
-        rolePrincipal: match[3] ? match[3].trim() : '',
-        roleSecondaire: match[4] ? match[4].trim() : ''
-      }
-    }
-    const parts = ligne.split(',')
-    if (parts.length >= 2) {
-      return {
-        id: Number.parseInt(parts[0]),
-        nom: parts[1].replaceAll('"', '').trim(),
-        actif: true,
-        rolePrincipal: parts[2] ? parts[2].replaceAll('"', '').trim() : '',
-        roleSecondaire: parts[3] ? parts[3].replaceAll('"', '').trim() : ''
-      }
-    }
-    return null
-  }).filter(p => p && p.id && p.nom)
+    if (Array.isArray(donnees) && donnees.length > 0) {
+      const membresValides = donnees
+        .filter(m => m && m.id && m.nom)
+        .map(m => ({
+          id: m.id,
+          nom: m.nom,
+          actif: m.actif !== undefined ? m.actif : true,
+          rolePrincipal: m.rolePrincipal || '',
+          roleSecondaire: m.roleSecondaire || ''
+        }))
 
-  if (donnees.length > 0) {
-    equipeStore.chargerEquipe(donnees)
-    afficherModal(`${donnees.length} membre(s) chargé(s)`)
-  } else {
-    afficherModal('Aucune donnée valide trouvée dans le fichier')
+      if (membresValides.length > 0) {
+        equipeStore.chargerEquipe(membresValides)
+        afficherModal(`${membresValides.length} membre(s) chargé(s)`)
+      } else {
+        afficherModal('Aucune donnée valide trouvée dans le fichier')
+      }
+    } else {
+      afficherModal('Aucune donnée valide trouvée dans le fichier')
+    }
+  } catch {
+    afficherModal('Erreur lors de l\'import : fichier JSON invalide')
   }
   event.target.value = ''
 }
@@ -123,10 +103,10 @@ const importerCSV = async (event) => {
         <button @click="ajouterPersonne">Ajouter</button>
       </div>
       <div class="ajout-right">
-        <button @click="exporterCSV" class="btn-export">Exporter CSV</button>
+        <button @click="exporterJSON" class="btn-export">Exporter JSON</button>
         <label class="btn-import">
-          Importer CSV
-          <input type="file" accept=".csv" @change="importerCSV" style="display: none;" />
+          Importer JSON
+          <input type="file" accept=".json" @change="importerJSON" style="display: none;" />
         </label>
       </div>
     </div>

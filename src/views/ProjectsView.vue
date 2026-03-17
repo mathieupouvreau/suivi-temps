@@ -3,13 +3,14 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProjetsStore } from '../stores/projets'
 import Modal from '../components/Modal.vue'
+import { exporterProjetsJSON } from '../services/export'
 
 /**
  * Vue de gestion des projets (CRUD)
  * Permet de créer, modifier et supprimer des projets
  * Chaque projet a un chiffrage global ventilé par tâche (Spec, Dev, Tests, Retour dev)
  * Affiche un indicateur si la somme des tâches ne correspond pas au chiffrage global
- * Gère l'import/export CSV des projets
+ * Gère l'import/export JSON des projets
  */
 
 const router = useRouter()
@@ -63,65 +64,53 @@ const supprimerProjet = (id) => {
   }
 }
 
-/**
- * Exporte la liste des projets au format CSV
- * Format : ID,Nom,Chiffrage,Spec,Dev,Tests,Retour dev
- * Téléchargement automatique avec nom de fichier daté
- */
-const exporterCSV = () => {
-  const csv = [
-    'ID,Nom,Chiffrage,Spec,Spec Pers.,Dev,Dev Pers.,Tests,Tests Pers.,Retour dev,Retour dev Pers.',
-    ...projetsStore.projets.map(p => `${p.id},"${p.nom}",${p.chiffrage || 0},${p.spec || 0},${p.specPersonnes || 1},${p.dev || 0},${p.devPersonnes || 1},${p.tests || 0},${p.testsPersonnes || 1},${p.retourDev || 0},${p.retourDevPersonnes || 1}`)
-  ].join('\n')
-
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = `projets_${new Date().toISOString().split('T')[0]}.csv`
-  link.click()
-  URL.revokeObjectURL(link.href)
+/** Exporte les projets au format JSON via la fonction partagée */
+const exporterJSON = () => {
+  exporterProjetsJSON(projetsStore.projets)
 }
 
 /**
- * Importe des projets depuis un fichier CSV
+ * Importe des projets depuis un fichier JSON
  * Remplace la liste actuelle par les données du fichier
- * Supporte 2 formats de parsing : regex (avec guillemets) et split par virgule
+ * Format attendu : tableau d'objets { id, nom, chiffrage, spec, dev, tests, retourDev, ... }
  * @param {Event} event - Événement change du champ file
  */
-const importerCSV = async (event) => {
+const importerJSON = async (event) => {
   const file = event.target.files[0]
   if (!file) return
 
-  const text = await file.text()
-  const lignes = text.split('\n').filter(l => l.trim())
+  try {
+    const text = await file.text()
+    const donnees = JSON.parse(text)
 
-  /** Parse une ligne CSV en extrayant l'ID, le nom (avec guillemets) et les valeurs numériques */
-  const parseLigneCSV = (ligne) => {
-    const matchNom = ligne.match(/^(\d+),"?([^"]+?)"?,(.*)$/)
-    if (!matchNom) return null
-    const valeurs = matchNom[3].split(',')
-    return {
-      id: Number.parseInt(matchNom[1]),
-      nom: matchNom[2].trim(),
-      chiffrage: Number.parseInt(valeurs[0]) || 0,
-      spec: Number.parseInt(valeurs[1]) || 0,
-      specPersonnes: Number.parseInt(valeurs[2]) || 1,
-      dev: Number.parseInt(valeurs[3]) || 0,
-      devPersonnes: Number.parseInt(valeurs[4]) || 1,
-      tests: Number.parseInt(valeurs[5]) || 0,
-      testsPersonnes: Number.parseInt(valeurs[6]) || 1,
-      retourDev: Number.parseInt(valeurs[7]) || 0,
-      retourDevPersonnes: Number.parseInt(valeurs[8]) || 1
+    if (Array.isArray(donnees) && donnees.length > 0) {
+      const projetsValides = donnees
+        .filter(p => p && p.id && p.nom)
+        .map(p => ({
+          id: p.id,
+          nom: p.nom,
+          chiffrage: p.chiffrage || 0,
+          spec: p.spec || 0,
+          specPersonnes: p.specPersonnes || 1,
+          dev: p.dev || 0,
+          devPersonnes: p.devPersonnes || 1,
+          tests: p.tests || 0,
+          testsPersonnes: p.testsPersonnes || 1,
+          retourDev: p.retourDev || 0,
+          retourDevPersonnes: p.retourDevPersonnes || 1
+        }))
+
+      if (projetsValides.length > 0) {
+        projetsStore.chargerProjets(projetsValides)
+        afficherModal(`${projetsValides.length} projet(s) chargé(s)`)
+      } else {
+        afficherModal('Aucune donnée valide trouvée dans le fichier')
+      }
+    } else {
+      afficherModal('Aucune donnée valide trouvée dans le fichier')
     }
-  }
-
-  const donnees = lignes.slice(1).map(parseLigneCSV).filter(p => p && p.id && p.nom)
-
-  if (donnees.length > 0) {
-    projetsStore.chargerProjets(donnees)
-    afficherModal(`${donnees.length} projet(s) chargé(s)`)
-  } else {
-    afficherModal('Aucune donnée valide trouvée dans le fichier')
+  } catch {
+    afficherModal('Erreur lors de l\'import : fichier JSON invalide')
   }
   event.target.value = ''
 }
@@ -143,10 +132,10 @@ const importerCSV = async (event) => {
         <button @click="ajouterProjet">Ajouter</button>
       </div>
       <div class="ajout-right">
-        <button @click="exporterCSV" class="btn-export">Exporter CSV</button>
+        <button @click="exporterJSON" class="btn-export">Exporter JSON</button>
         <label class="btn-import">
-          Importer CSV
-          <input type="file" accept=".csv" @change="importerCSV" style="display: none;" />
+          Importer JSON
+          <input type="file" accept=".json" @change="importerJSON" style="display: none;" />
         </label>
       </div>
     </div>

@@ -12,8 +12,8 @@ Tu analyses les données existantes (équipe, projets, chiffrages, jours typés,
 ## Prérequis
 
 L'utilisateur doit avoir exporté les données depuis l'application dans le dossier `data/` à la racine du projet :
-- `data/equipe.csv` — Membres de l'équipe
-- `data/projets.csv` — Projets avec chiffrages
+- `data/equipe.json` — Membres de l'équipe
+- `data/projets.json` — Projets avec chiffrages
 - `data/jours.json` — Jours d'absence et jours typés
 - `data/affectations.json` — Affectations existantes (peut être absent)
 

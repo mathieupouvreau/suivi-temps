@@ -10,6 +10,7 @@ import Modal from '../components/Modal.vue'
 import AffectationMasseProjet from '../components/AffectationMasseProjet.vue'
 import ModalCompteursProjet from '../components/ModalCompteursProjet.vue'
 import { MOIS, NOMS_JOURS } from '../config/constantes'
+import { exporterAffectationsJSON } from '../services/export'
 
 /**
  * Vue calendrier des affectations projets par année
@@ -121,18 +122,9 @@ const isJourGrise = (personneId, moisIndex, jour) => {
   return isWeekend(moisIndex, jour) || isAbsence(personneId, moisIndex, jour)
 }
 
-/**
- * Exporte les affectations projets au format JSON
- * Téléchargement automatique avec nom de fichier daté
- */
+/** Exporte les affectations projets au format JSON via la fonction partagée */
 const exporterJSON = () => {
-  const json = JSON.stringify(affectationsStore.affectations, null, 2)
-  const blob = new Blob([json], { type: 'application/json;charset=utf-8;' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = `affectations_projets_${new Date().toISOString().split('T')[0]}.json`
-  link.click()
-  URL.revokeObjectURL(link.href)
+  exporterAffectationsJSON(affectationsStore.affectations)
   afficherModal('Export réussi')
 }
 

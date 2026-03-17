@@ -1,8 +1,8 @@
 """
 Script de génération du fichier de contexte pour les affectations.
 
-Lit   : data/equipe.csv
-        data/projets.csv
+Lit   : data/equipe.json
+        data/projets.json
         data/jours.json
         data/affectations.json        (optionnel)
         data/choix-utilisateur.json   (produit par l'agent IA)
@@ -12,7 +12,6 @@ Stdout: résumé JSON compact
 
 from __future__ import annotations
 
-import csv
 import json
 import sys
 from datetime import date, datetime, timedelta
@@ -23,8 +22,8 @@ from pathlib import Path
 # ────────────────────────────────────────────────────────────
 
 DATA_DIR = Path("data")
-EQUIPE_PATH = DATA_DIR / "equipe.csv"
-PROJETS_PATH = DATA_DIR / "projets.csv"
+EQUIPE_PATH = DATA_DIR / "equipe.json"
+PROJETS_PATH = DATA_DIR / "projets.json"
 JOURS_PATH = DATA_DIR / "jours.json"
 AFFECTATIONS_PATH = DATA_DIR / "affectations.json"
 CHOIX_PATH = DATA_DIR / "choix-utilisateur.json"
@@ -40,51 +39,48 @@ def erreur(msg: str):
 # 1. Lecture des fichiers sources
 # ────────────────────────────────────────────────────────────
 
-# equipe.csv
+# equipe.json
 if not EQUIPE_PATH.exists():
     erreur(f"Fichier {EQUIPE_PATH} introuvable.")
 
-equipe: list[dict] = []
-with EQUIPE_PATH.open(encoding="utf-8") as f:
-    reader = csv.DictReader(f)
-    for row in reader:
-        equipe.append({
-            "id": int(row["ID"]),
-            "nom": row["Nom"].strip().strip('"'),
-            "rolePrincipal": row.get("Rôle principal", "").strip().strip('"'),
-            "roleSecondaire": row.get("Rôle secondaire", "").strip().strip('"'),
-        })
+try:
+    equipe_raw = json.loads(EQUIPE_PATH.read_text(encoding="utf-8"))
+except (json.JSONDecodeError, OSError) as e:
+    erreur(f"Erreur de parsing de {EQUIPE_PATH} : {e}")
 
-# projets.csv
+equipe: list[dict] = []
+for row in equipe_raw:
+    equipe.append({
+        "id": int(row["id"]),
+        "nom": row["nom"],
+        "rolePrincipal": row.get("rolePrincipal", ""),
+        "roleSecondaire": row.get("roleSecondaire", ""),
+    })
+
+# projets.json
 if not PROJETS_PATH.exists():
     erreur(f"Fichier {PROJETS_PATH} introuvable.")
 
+try:
+    projets_raw = json.loads(PROJETS_PATH.read_text(encoding="utf-8"))
+except (json.JSONDecodeError, OSError) as e:
+    erreur(f"Erreur de parsing de {PROJETS_PATH} : {e}")
+
 projets: list[dict] = []
-with PROJETS_PATH.open(encoding="utf-8") as f:
-    reader = csv.DictReader(f)
-    fieldnames = reader.fieldnames or []
-    has_pers = "Spec Pers." in fieldnames
-    for row in reader:
-        p: dict = {
-            "id": int(row["ID"]),
-            "nom": row["Nom"].strip().strip('"'),
-            "chiffrage": int(row["Chiffrage"]),
-            "spec": int(row["Spec"]),
-            "dev": int(row["Dev"]),
-            "tests": int(row["Tests"]),
-            "retourDev": int(row["Retour dev"]),
-        }
-        if has_pers:
-            p["specPersonnes"] = int(row.get("Spec Pers.", "1") or "1")
-            p["devPersonnes"] = int(row.get("Dev Pers.", "1") or "1")
-            p["testsPersonnes"] = int(row.get("Tests Pers.", "1") or "1")
-            p["retourDevPersonnes"] = int(row.get("Retour dev Pers.", "1") or "1")
-        else:
-            p["specPersonnes"] = 1
-            p["devPersonnes"] = 1
-            p["testsPersonnes"] = 1
-            p["retourDevPersonnes"] = 1
-        projets.append(p)
+for row in projets_raw:
+    projets.append({
+        "id": int(row["id"]),
+        "nom": row["nom"],
+        "chiffrage": int(row.get("chiffrage", 0)),
+        "spec": int(row.get("spec", 0)),
+        "dev": int(row.get("dev", 0)),
+        "tests": int(row.get("tests", 0)),
+        "retourDev": int(row.get("retourDev", 0)),
+        "specPersonnes": int(row.get("specPersonnes", 1)),
+        "devPersonnes": int(row.get("devPersonnes", 1)),
+        "testsPersonnes": int(row.get("testsPersonnes", 1)),
+        "retourDevPersonnes": int(row.get("retourDevPersonnes", 1)),
+    })
 
 # jours.json
 if not JOURS_PATH.exists():

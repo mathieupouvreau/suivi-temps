@@ -8,8 +8,8 @@ L'agent **manager** permet de planifier automatiquement l'affectation des membre
 Utilisateur                   Agent                         Fichiers
     │                           │                              │
     │  Exporter les données     │                              │
-    │  depuis l'application ──────────────────────────────────▶│ data/equipe.csv
-    │                           │                              │ data/projets.csv
+    │  depuis l'application ──────────────────────────────────▶│ data/equipe.json
+    │                           │                              │ data/projets.json
     │                           │                              │ data/jours.json
     │                           │                              │ data/affectations.json
     │                           │                              │
@@ -52,8 +52,8 @@ Utilisateur                   Agent                         Fichiers
       references/
         structures-donnees.md              # Référence : formats de données
 data/                                      # Dossier des données (à la racine)
-  equipe.csv                               # Entrée : membres
-  projets.csv                              # Entrée : projets
+  equipe.json                              # Entrée : membres
+  projets.json                             # Entrée : projets
   jours.json                               # Entrée : absences
   affectations.json                        # Entrée/Sortie : affectations
   rapport-affectations.md                  # Sortie : rapport d'échec
@@ -63,42 +63,53 @@ data/                                      # Dossier des données (à la racine)
 
 ## Fichiers d'entrée
 
-### `data/equipe.csv`
+### `data/equipe.json`
 
-Exporté depuis la vue **Équipe** (`/equipe`) → bouton **Exporter CSV**.
+Exporté depuis la vue **Équipe** (`/equipe`) → bouton **Exporter JSON**.
 
-| Colonne | Description | Exemple |
-|---------|-------------|---------|
-| ID | Identifiant unique du membre | `1` |
-| Nom | Nom complet (entre guillemets) | `"Jean Dupont"` |
-| Rôle principal | Rôle principal : Spec, Dev, Tests (ou vide) | `"Dev"` |
-| Rôle secondaire | Rôle secondaire (ou vide) | `"Tests"` |
+Tableau JSON d'objets membres :
 
-```csv
-ID,Nom,Rôle principal,Rôle secondaire
-1,"Jean Dupont","Dev","Tests"
-2,"Marie Martin","Spec",""
-3,"Paul Durand","Tests","Dev"
+| Champ | Description | Exemple |
+|-------|-------------|--------|
+| id | Identifiant unique du membre | `1` |
+| nom | Nom complet | `"Jean Dupont"` |
+| actif | Membre actif | `true` |
+| rolePrincipal | Rôle principal : Spec, Dev, Tests (ou vide) | `"Dev"` |
+| roleSecondaire | Rôle secondaire (ou vide) | `"Tests"` |
+
+```json
+[
+  { "id": 1, "nom": "Jean Dupont", "actif": true, "rolePrincipal": "Dev", "roleSecondaire": "Tests" },
+  { "id": 2, "nom": "Marie Martin", "actif": true, "rolePrincipal": "Spec", "roleSecondaire": "" },
+  { "id": 3, "nom": "Paul Durand", "actif": true, "rolePrincipal": "Tests", "roleSecondaire": "Dev" }
+]
 ```
 
-### `data/projets.csv`
+### `data/projets.json`
 
-Exporté depuis la vue **Projets** (`/projets`) → bouton **Exporter CSV**.
+Exporté depuis la vue **Projets** (`/projets`) → bouton **Exporter JSON**.
 
-| Colonne | Description | Exemple |
-|---------|-------------|---------|
-| ID | Identifiant unique du projet | `1` |
-| Nom | Nom du projet (entre guillemets) | `"Mon Projet"` |
-| Chiffrage | Chiffrage total en jours | `50` |
-| Spec | Jours de spécification | `5` |
-| Dev | Jours de développement | `30` |
-| Tests | Jours de tests | `10` |
-| Retour dev | Jours de retour dev | `5` |
+Tableau JSON d'objets projets :
 
-```csv
-ID,Nom,Chiffrage,Spec,Dev,Tests,Retour dev
-1,"Mon Projet",50,5,30,10,5
-2,"Autre Projet",20,2,12,4,2
+| Champ | Description | Exemple |
+|-------|-------------|--------|
+| id | Identifiant unique du projet | `1` |
+| nom | Nom du projet | `"Mon Projet"` |
+| chiffrage | Chiffrage total en jours | `50` |
+| spec | Jours de spécification | `5` |
+| specPersonnes | Max personnes en parallèle pour Spec | `1` |
+| dev | Jours de développement | `30` |
+| devPersonnes | Max personnes en parallèle pour Dev | `2` |
+| tests | Jours de tests | `10` |
+| testsPersonnes | Max personnes en parallèle pour Tests | `1` |
+| retourDev | Jours de retour dev | `5` |
+| retourDevPersonnes | Max personnes en parallèle pour Retour dev | `1` |
+
+```json
+[
+  { "id": 1, "nom": "Mon Projet", "chiffrage": 50, "spec": 5, "specPersonnes": 1, "dev": 30, "devPersonnes": 2, "tests": 10, "testsPersonnes": 1, "retourDev": 5, "retourDevPersonnes": 1 },
+  { "id": 2, "nom": "Autre Projet", "chiffrage": 20, "spec": 2, "specPersonnes": 1, "dev": 12, "devPersonnes": 1, "tests": 4, "testsPersonnes": 1, "retourDev": 2, "retourDevPersonnes": 1 }
+]
 ```
 
 ### `data/jours.json`
@@ -193,7 +204,7 @@ Fichier généré **uniquement si des projets sont en échec** (ressources insuf
 | 4 | Afficher le diagnostic (projets à planifier, projets ignorés, équipe) |
 | 5 | Demander les dates de début et de fin par projet |
 
-**Entrées** : `data/equipe.csv`, `data/projets.csv`, `data/jours.json`, `data/affectations.json`
+**Entrées** : `data/equipe.json`, `data/projets.json`, `data/jours.json`, `data/affectations.json`
 **Sortie** : Diagnostic affiché dans le chat + collecte des dates
 
 ### `/executer-affectations` — Affectation
@@ -209,7 +220,7 @@ Fichier généré **uniquement si des projets sont en échec** (ressources insuf
 | 5 | Proposer le plan récapitulatif et attendre validation |
 | 6 | Générer `data/affectations-finales.json` et `data/rapport-affectations.md` |
 
-**Entrées** : `data/equipe.csv`, `data/projets.csv`, `data/jours.json`, `data/affectations.json`, dates fournies par l'utilisateur
+**Entrées** : `data/equipe.json`, `data/projets.json`, `data/jours.json`, `data/affectations.json`, dates fournies par l'utilisateur
 **Sorties** : `data/affectations-finales.json`, `data/rapport-affectations.md` (si échecs)
 
 ---
@@ -256,8 +267,8 @@ Depuis l'application, exporter les 4 fichiers :
 
 | Vue | Bouton | Fichier à renommer |
 |-----|--------|--------------------|
-| `/equipe` | Exporter CSV | → `data/equipe.csv` |
-| `/projets` | Exporter CSV | → `data/projets.csv` |
+| `/equipe` | Exporter JSON | → `data/equipe.json` |
+| `/projets` | Exporter JSON | → `data/projets.json` |
 | `/annee/:annee` | Exporter les jours (JSON) | → `data/jours.json` |
 | `/calendrier/:annee` | Exporter (JSON) | → `data/affectations.json` |
 

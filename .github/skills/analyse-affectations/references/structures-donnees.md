@@ -2,19 +2,21 @@
 
 ## Fichiers de données (dossier `data/`)
 
-### equipe.csv
-```csv
-ID,Nom,Rôle principal,Rôle secondaire
-1,"Jean Dupont","Dev","Tests"
-2,"Marie Martin","Spec",""
+### equipe.json
+```json
+[
+  { "id": 1, "nom": "Jean Dupont", "actif": true, "rolePrincipal": "Dev", "roleSecondaire": "Tests" },
+  { "id": 2, "nom": "Marie Martin", "actif": true, "rolePrincipal": "Spec", "roleSecondaire": "" }
+]
 ```
 
-### projets.csv
-```csv
-ID,Nom,Chiffrage,Spec,Spec Pers.,Dev,Dev Pers.,Tests,Tests Pers.,Retour dev,Retour dev Pers.
-1,"Mon Projet",50,5,1,30,2,10,1,5,1
+### projets.json
+```json
+[
+  { "id": 1, "nom": "Mon Projet", "chiffrage": 50, "spec": 5, "specPersonnes": 1, "dev": 30, "devPersonnes": 2, "tests": 10, "testsPersonnes": 1, "retourDev": 5, "retourDevPersonnes": 1 }
+]
 ```
-- Les colonnes `Pers.` indiquent le nombre max de personnes en parallèle par tâche (défaut : 1)
+- Les champs `*Personnes` indiquent le nombre max de personnes en parallèle par tâche (défaut : 1 si absent)
 
 ### jours.json
 ```json
@@ -49,7 +51,7 @@ ID,Nom,Chiffrage,Spec,Spec Pers.,Dev,Dev Pers.,Tests,Tests Pers.,Retour dev,Reto
 ## Stores de référence (code source)
 
 - `src/stores/equipe.js` — `{ id, nom, actif, rolePrincipal, roleSecondaire }`
-- `src/stores/projets.js` — `{ id, nom, chiffrage, spec, dev, tests, retourDev, specPersonnes, devPersonnes, testsPersonnes, retourDevPersonnes }`
+- `src/stores/projets.js` — `{ id, nom, chiffrage, spec, specPersonnes, dev, devPersonnes, tests, testsPersonnes, retourDev, retourDevPersonnes }`
 - `src/stores/jours.js` — `jours[annee][personneId][moisIndex][jour] = typeId`
 - `src/stores/affectationsProjets.js` — `affectations[annee][personneId][moisIndex][jour] = { projetId, tache }`
 - `src/config/constantes.js` — `MOIS` (noms des mois), `NOMS_JOURS` (Dim, Lun, Mar, etc.)

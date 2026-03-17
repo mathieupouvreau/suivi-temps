@@ -13,8 +13,8 @@ Lire les fichiers de données exportés et produire un diagnostic complet : quel
 
 L'utilisateur doit avoir exporté les données depuis l'application dans le dossier `data/` :
 
-1. **`data/equipe.csv`** — Format : `ID,Nom,Rôle principal,Rôle secondaire`
-2. **`data/projets.csv`** — Format : `ID,Nom,Chiffrage,Spec,Spec Pers.,Dev,Dev Pers.,Tests,Tests Pers.,Retour dev,Retour dev Pers.` (les colonnes `Pers.` indiquent le nombre max de personnes en parallèle par tâche ; si absentes → défaut 1)
+1. **`data/equipe.json`** — Format : tableau JSON `[{ id, nom, rolePrincipal, roleSecondaire }, ...]`
+2. **`data/projets.json`** — Format : tableau JSON `[{ id, nom, chiffrage, spec, specPersonnes, dev, devPersonnes, tests, testsPersonnes, retourDev, retourDevPersonnes }, ...]` (les champs `*Personnes` indiquent le nombre max de personnes en parallèle par tâche ; défaut 1 si absent)
 3. **`data/jours.json`** — Format : `{ "annee": { "personneId": { "moisIndex": { "jour": "typeId" } } } }`
 4. **`data/affectations.json`** — Format : `{ "annee": { "personneId": { "moisIndex": { "jour": { "projetId": N, "tache": "Dev" } } } } }` (peut être absent)
 
@@ -24,10 +24,8 @@ Si un fichier manque, demander à l'utilisateur de l'exporter depuis l'applicati
 
 ### 1. Lire les données
 
-- Parser `data/equipe.csv` pour obtenir la liste des membres actifs avec leurs rôles
-- Parser `data/projets.csv` pour obtenir la liste des projets et leurs chiffrages par tâche. **Deux formats supportés** :
-  - Nouveau format (11 colonnes) : `ID,Nom,Chiffrage,Spec,Spec Pers.,Dev,Dev Pers.,Tests,Tests Pers.,Retour dev,Retour dev Pers.`
-  - Ancien format (7 colonnes) : `ID,Nom,Chiffrage,Spec,Dev,Tests,Retour dev` — dans ce cas, `maxPersonnes` vaut 1 pour toutes les tâches
+- Lire `data/equipe.json` pour obtenir la liste des membres actifs avec leurs rôles
+- Lire `data/projets.json` pour obtenir la liste des projets et leurs chiffrages par tâche (les champs `*Personnes` indiquent le nombre max de personnes en parallèle ; défaut 1 si absent)
 - Lire `data/jours.json` pour les jours d'absence (CP, 1/2CP, Fe, 1/2Fe, Arr, 1/2Arr, For, 1/2For, Cli, 1/2Cli)
 - Lire `data/affectations.json` pour les affectations existantes (si le fichier existe)
 
@@ -270,7 +268,7 @@ Générer le fichier `data/choix-utilisateur.json` contenant **uniquement** les 
 | Champ | Description |
 |-------|-------------|
 | `projets` | Liste des projets sélectionnés par l'utilisateur |
-| `projets[].projetId` | ID du projet (correspond à `data/projets.csv`) |
+| `projets[].projetId` | ID du projet (correspond à `data/projets.json`) |
 | `projets[].nom` | Nom du projet (informatif) |
 | `projets[].dateDebut` | Date de début au format `JJ/MM/AAAA` (collectée à l'étape 5) |
 | `projets[].dateFin` | Date de fin au format `JJ/MM/AAAA` (collectée à l'étape 5) |
@@ -281,7 +279,7 @@ Générer le fichier `data/choix-utilisateur.json` contenant **uniquement** les 
 **Règles** :
 - N'inclure que les projets à planifier (pas les projets ignorés)
 - N'inclure que les tâches à planifier (chiffrage > 0, pas déjà affectées)
-- Les `personnes` sont une liste de **noms** (strings) correspondant aux noms dans `equipe.csv`
+- Les `personnes` sont une liste de **noms** (strings) correspondant aux noms dans `equipe.json`
 - Si l'utilisateur a choisi "Pas de préférence" pour une tâche, la liste `personnes` est vide `[]`
 
 #### 7b. Exécuter le script de génération du contexte
@@ -295,7 +293,7 @@ cd /workspaces/suivi-temps && python3 .github/skills/analyse-affectations/script
 **Ne jamais demander à l'utilisateur de lancer la commande manuellement.** L'agent doit toujours exécuter le script lui-même.
 
 Le script :
-- Lit `data/equipe.csv`, `data/projets.csv`, `data/jours.json`, `data/affectations.json` et `data/choix-utilisateur.json`
+- Lit `data/equipe.json`, `data/projets.json`, `data/jours.json`, `data/affectations.json` et `data/choix-utilisateur.json`
 - Calcule les week-ends, identifie les tâches déjà planifiées, fusionne le tout
 - Écrit `data/contexte-affectations.json` (fichier complet consommé par le skill `executer-affectations`)
 - Affiche un résumé JSON sur stdout
@@ -309,8 +307,8 @@ Le fichier `data/contexte-affectations.json` produit contient :
 | Champ | Description |
 |-------|-------------|
 | `dateGeneration` | Date ISO de génération du fichier |
-| `equipe` | Membres actifs issus de `data/equipe.csv` (id, nom, rolePrincipal, roleSecondaire) |
-| `projets` | Projets issus de `data/projets.csv` (id, nom, chiffrage, spec, specPersonnes, dev, devPersonnes, tests, testsPersonnes, retourDev, retourDevPersonnes) |
+| `equipe` | Membres actifs issus de `data/equipe.json` (id, nom, rolePrincipal, roleSecondaire) |
+| `projets` | Projets issus de `data/projets.json` (id, nom, chiffrage, spec, specPersonnes, dev, devPersonnes, tests, testsPersonnes, retourDev, retourDevPersonnes) |
 | `jours` | Copie intégrale de `data/jours.json` (absences et types de jours) |
 | `weekends` | Liste de toutes les dates (format `JJ/MM/AAAA`) correspondant à des samedis et dimanches dans la période de planification |
 | `affectationsExistantes` | Copie intégrale de `data/affectations.json` (affectations déjà faites) |

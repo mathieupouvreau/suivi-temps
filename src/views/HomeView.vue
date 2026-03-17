@@ -6,6 +6,7 @@ import { useEquipeStore } from '../stores/equipe'
 import { useProjetsStore } from '../stores/projets'
 import { useJoursStore } from '../stores/jours'
 import { useAffectationsProjetsStore } from '../stores/affectationsProjets'
+import { exporterEquipeJSON, exporterProjetsJSON, exporterJoursJSON, exporterAffectationsJSON } from '../services/export'
 
 /**
  * Vue d'accueil de l'application
@@ -62,45 +63,15 @@ const supprimerAnnee = (annee) => {
 }
 
 /**
- * Télécharge un fichier avec le contenu et le nom donnés
- * @param {string} contenu - Contenu du fichier
- * @param {string} nomFichier - Nom du fichier à télécharger
- * @param {string} type - Type MIME du fichier
- */
-const telechargerFichier = (contenu, nomFichier, type) => {
-  const blob = new Blob([contenu], { type })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = nomFichier
-  link.click()
-  URL.revokeObjectURL(link.href)
-}
-
-/**
  * Exporte les 4 fichiers de données pour l'agent d'affectation
- * Utilise les mêmes formats que les exports des écrans spécifiques
- * Fichiers : equipe.csv, projets.csv, jours.json, affectations.json
+ * Utilise les fonctions partagées de services/export.js
+ * Fichiers : equipe.json, projets.json, jours.json, affectations.json
  */
 const exporterPourAgent = () => {
-  // Équipe — même format que EquipeView.exporterCSV (tous les membres)
-  const equipeCsv = [
-    'ID,Nom,Rôle principal,Rôle secondaire',
-    ...equipeStore.membres.map(m => `${m.id},"${m.nom}","${m.rolePrincipal || ''}","${m.roleSecondaire || ''}"`)
-  ].join('\n')
-  telechargerFichier(equipeCsv, 'equipe.csv', 'text/csv;charset=utf-8;')
-
-  // Projets — même format que ProjectsView.exporterCSV (avec colonnes Pers.)
-  const projetsCsv = [
-    'ID,Nom,Chiffrage,Spec,Spec Pers.,Dev,Dev Pers.,Tests,Tests Pers.,Retour dev,Retour dev Pers.',
-    ...projetsStore.projets.map(p => `${p.id},"${p.nom}",${p.chiffrage || 0},${p.spec || 0},${p.specPersonnes || 1},${p.dev || 0},${p.devPersonnes || 1},${p.tests || 0},${p.testsPersonnes || 1},${p.retourDev || 0},${p.retourDevPersonnes || 1}`)
-  ].join('\n')
-  telechargerFichier(projetsCsv, 'projets.csv', 'text/csv;charset=utf-8;')
-
-  // Jours — même format que HolidaysView.exporterJSON (toutes les années)
-  telechargerFichier(JSON.stringify(joursStore.jours, null, 2), 'jours.json', 'application/json;charset=utf-8;')
-
-  // Affectations — même format que ProjetView.exporterJSON (toutes les années)
-  telechargerFichier(JSON.stringify(affectationsStore.affectations, null, 2), 'affectations.json', 'application/json;charset=utf-8;')
+  exporterEquipeJSON(equipeStore.membres, 'equipe.json')
+  exporterProjetsJSON(projetsStore.projets, 'projets.json')
+  exporterJoursJSON(joursStore.jours, 'jours.json')
+  exporterAffectationsJSON(affectationsStore.affectations, 'affectations.json')
 }
 </script>
 
@@ -120,7 +91,7 @@ const exporterPourAgent = () => {
         style="padding: 0.5rem; width: 10rem;"
       />
       <button @click="ajouterAnnee">Ajouter année</button>
-      <button @click="exporterPourAgent" class="btn-export" title="Exporte equipe.csv, projets.csv, jours.json et affectations.json">Export agent</button>
+      <button @click="exporterPourAgent" class="btn-export" title="Exporte equipe.json, projets.json, jours.json et affectations.json">Export agent</button>
     </div>
 
     <table v-if="anneesStore.annees.length > 0">

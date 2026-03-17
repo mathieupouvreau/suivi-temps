@@ -8,6 +8,7 @@ import Modal from '../components/Modal.vue'
 import AffectationMasse from '../components/AffectationMasse.vue'
 import ModalCompteurs from '../components/ModalCompteurs.vue'
 import { MOIS, NOMS_JOURS } from '../config/constantes'
+import { exporterJoursJSON } from '../services/export'
 
 /**
  * Vue principale de l'année
@@ -95,14 +96,9 @@ const getTypeJour = (personneId, moisIndex, jour) => {
   return joursStore.getTypeJour(annee.value, personneId, moisIndex, jour)
 }
 
+/** Exporte les jours au format JSON via la fonction partagée */
 const exporterJSON = () => {
-  const json = JSON.stringify(joursStore.jours, null, 2)
-  const blob = new Blob([json], { type: 'application/json;charset=utf-8;' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = `jours_${new Date().toISOString().split('T')[0]}.json`
-  link.click()
-  URL.revokeObjectURL(link.href)
+  exporterJoursJSON(joursStore.jours)
   afficherModal('Export réussi')
 }
 
